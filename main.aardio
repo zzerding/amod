@@ -1,0 +1,80 @@
+//amod 第三方库管理工具
+//todo 
+//1.use git or ide.instll local global clone and remote
+//2.list local repe and global repe
+//3.write repo version
+//4.update list remove
+import fonts.fontAwesome;
+import win.ui;
+/*DSG{{*/
+mainForm = win.form(text="amazon_ocr";right=1040;bottom=682;bgcolor=15793151;border="none";max=false)
+mainForm.add(
+bkplus2={cls="bkplus";left=0;top=646;right=1042;bottom=685;bgcolor=633981;dl=1;dr=1;dt=1;forecolor=702855;linearGradient=4;z=1};
+caption={cls="bkplus";text="AMOD 包管理工具";left=34;top=12;right=159;bottom=30;color=15780518;dl=1;dt=1;font=LOGFONT(h=-14;weight=700);z=5};
+custom={cls="custom";left=0;top=40;right=1041;bottom=647;bgcolor=16777215;db=1;dl=1;dr=1;dt=1;repeat="scale";z=2};
+log={cls="plus";text="启动成功 ";left=216;top=656;right=756;bottom=678;color=128;z=12};
+navFirst={cls="plus";text="管理";left=166;top=5;right=260;bottom=40;align="left";color=16777215;dl=1;dt=1;font=LOGFONT(h=-16);iconStyle={align="left";font=LOGFONT(h=-19;name='FontAwesome');padding={left=12;top=4}};iconText='\uF0AD';notify=1;paddingLeft=1;paddingRight=1;paddingTop=3;textPadding={left=39;bottom=1};x=0.5;y=0.2;z=4};
+navNewLib={cls="plus";text="新建";left=359;top=5;right=453;bottom=40;align="left";color=16777215;dl=1;dt=1;font=LOGFONT(h=-16);iconStyle={align="left";font=LOGFONT(h=-19;name='FontAwesome');padding={left=12;top=4}};iconText='\uF002';notify=1;paddingLeft=1;paddingRight=1;paddingTop=3;textPadding={left=39;bottom=1};x=0.5;y=0.2;z=13};
+navSetting={cls="plus";text="远程";left=260;top=5;right=354;bottom=40;align="left";color=16777215;dl=1;dt=1;font=LOGFONT(h=-16);iconStyle={align="left";font=LOGFONT(h=-19;name='FontAwesome');padding={left=12;top=4}};iconText='\uF002';notify=1;paddingLeft=1;paddingRight=1;paddingTop=3;textPadding={left=39;bottom=1};x=0.5;y=0.2;z=6};
+plus={cls="plus";text="Star | 100k";left=770;top=651;right=886;bottom=680;align="left";border={color=-10066330;radius=8;width=2};dl=1;dt=1;iconStyle={align="left";font=LOGFONT(h=-16;name='FontAwesome');padding={left=11;top=4}};iconText='\uF006';notify=1;paddingLeft=1;paddingRight=1;paddingTop=3;textPadding={left=35;bottom=1};x=0.5;y=0.2;z=8};
+plus2={cls="plus";left=11;top=7;right=39;bottom=30;background="\res\logo_ico.ico";repeat="scale";z=7};
+plus3={cls="plus";text="Fork | 100k";left=907;top=651;right=1023;bottom=680;align="left";border={color=-10066330;radius=8;width=2};dl=1;dt=1;iconStyle={align="left";font=LOGFONT(h=-16;name='FontAwesome');padding={left=11;top=4}};iconText='\uF287';notify=1;paddingLeft=1;paddingRight=1;paddingTop=3;textPadding={left=35;bottom=1};x=0.5;y=0.2;z=9};
+plus4={cls="plus";text="QQ: 37791537";left=105;top=657;right=199;bottom=679;align="left";z=10};
+plus5={cls="plus";text="版本：V 0.0.1";left=11;top=656;right=94;bottom=678;align="left";z=11};
+titleBar={cls="bkplus";left=0;top=0;right=1042;bottom=40;bgcolor=14977280;dl=1;dr=1;dt=1;z=3}
+)
+/*}}*/
+
+import win.dlg.message
+import win.ui.tabs;
+import win.ui.simpleWindow;
+subscribe("log",function(...){
+	msg = string.concat(...)
+	mainForm.log.text = msg
+} )
+publish("log","启动成功")
+
+tbs = win.ui.tabs( 
+	mainForm.navFirst,
+	//mainForm.navHotkey,
+	mainForm.navSetting,
+	mainForm.navNewLib
+);
+	
+tbs.skin({
+	foreground={
+		active=0xFFFFFFFF;
+		default=0x00FFFFFF;
+		hover=0x38FFFFFF
+	};
+	color={
+		default=0xFFFFFFFF; 
+	};
+	checked={
+		foreground={default=0xFFFFFFFF;}; 
+		color={default=0xFF42A875;};
+	}
+})
+
+tbs.loadForm(1,"\dlg\setting.aardio" );	
+tbs.loadForm(2,"\dlg\remote.aardio" );  
+tbs.loadForm(3,"\dlg\newlib.aardio" );  
+mainForm.plus.skin(
+	background = { 
+		hover = "/res/images/btn-hover.png";
+		focus = "/res/images/btn-focus.jpg";
+		active = "/res/images/btn-active.png";
+		disabled = "/res/images/btn-disabled.png"; 
+	}
+)
+mainForm.plus.oncommand = function(id,event){	
+	import process;
+	process.execute("http://bbs.aardio.com");
+}
+
+tbs.selIndex = 1; 
+
+win.ui.simpleWindow( mainForm )
+mainForm.enableDpiScaling()
+mainForm.show();
+return win.loopMessage();

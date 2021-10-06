@@ -1,0 +1,157 @@
+//setting 包管理
+import fonts.fontAwesome;
+import win.ui;
+/*DSG{{*/
+var winform = win.form(text="包管理";right=1040;bottom=607;border="thin")
+winform.add(
+btnDeselectAll={cls="button";text="取消全选";left=147;top=527;right=247;bottom=557;z=6};
+btnInstallGlobal={cls="button";text="安装到全局";left=907;top=490;right=1007;bottom=520;z=11};
+btnInstallProject={cls="button";text="安装到本地";left=907;top=527;right=1007;bottom=557;z=7};
+btnSearch={cls="button";text="查找";left=756;top=527;right=856;bottom=557;z=9};
+btnSelectAll={cls="button";text="全选";left=28;top=527;right=128;bottom=557;z=5};
+btn_ls={cls="button";text="列出所有库";left=907;top=375;right=1007;bottom=405;z=12};
+btn_update={cls="button";text="拉取远程列表";left=907;top=333;right=1007;bottom=363;z=10};
+editKeyword={cls="edit";left=445;top=527;right=745;bottom=557;edge=1;multiline=1;z=8};
+groupbox={cls="groupbox";text="功能";left=882;top=13;right=1032;bottom=577;edge=1;z=2};
+groupbox2={cls="groupbox";text="扩展";left=11;top=8;right=870;bottom=578;edge=1;z=1};
+listview={cls="listview";left=26;top=36;right=856;bottom=514;edge=1;z=4};
+logs={cls="static";left=33;top=585;right=1032;bottom=608;transparent=1;z=3}
+)
+/*}}*/
+
+import ide
+import win.ui.tabs
+import config
+import string.toml
+import fsys
+import fsys.table
+import win.dlg.message
+import package
+
+
+winform.logs.text="当前项目配置文件路径:  " + config.toml.path
+var libs = package.loadCacheLib()
+var installedLibs = package.loadInstallLibs()
+	
+import win.debounce
+var search =win.debounce(
+function (){
+	var keyword = winform.editKeyword.text
+	var filterLibs = package.filterLib(keyword,libs)
+	showLibsToTable(filterLibs)
+},500)
+
+
+function showLibsToTable(libs){
+		winform.listview.clear()
+		for libName,libInfo in table.eachName(libs){ 
+		var item = {
+			libName;
+			libInfo.version;
+			installedLibs[libName][["version"]] : "未安装";
+			libInfo.author;
+			libInfo.description
+		}
+		var row = winform.listview.addItem( item)
+	}
+}
+
+//listview
+winform.listview.setExtended(0x4/*_LVS_EX_CHECKBOXES*/)
+winform.listview.insertColumn("扩展库",150) 
+winform.listview.insertColumn("版本",70) 
+winform.listview.insertColumn("本地版本",70) 
+winform.listview.insertColumn("作者",70)  
+winform.listview.insertColumn("说明",-1)
+//winform.listview.addItem({"1";"2";"3";"4";"5"})
+
+
+
+
+//全选
+winform.btnSelectAll.oncommand = function(id,event){ 
+	for(i=winform.listview.count;1;-1){
+		winform.listview.setChecked(i,true) 
+	}  
+}
+ //取消全选
+winform.btnDeselectAll.oncommand = function(id,event){
+	for(i=winform.listview.count;1;-1){
+		winform.listview.setChecked(i,false) 
+	} 	
+}
+
+winform.btn_ls.oncommand = function(id,event){
+	winform.listview.clear()
+	showLibsToTable(libs)
+}
+
+winform.btn_update.oncommand = function(id,event){
+	winform.btn_update.disabled = true
+	err = package.update()
+
+	if(err) winform.msgWarn("更新失败")
+	
+	libs = package.loadCacheLib()
+	winform.msgOk("成功",err)
+	winform.btn_update.disabled = false
+}
+
+winform.btnSearch.oncommand = function(id,event){
+	winform.btnSearch.disabled = true
+	search()
+	winform.btnSearch.disabled = false
+}
+
+winform.editKeyword.onOk = function(){ 
+     search();
+    return true; 	
+}
+
+winform.editKeyword.onChange = function(){ 
+	search()
+}
+
+var installPackage = function(installPath){
+	for(i=winform.listview.count;1;-1){
+		if( winform.listview.getChecked(i) ){
+			var libName = winform.listview.getItemText(i,1) ;
+			var libVersion = winform.listview.getItemText(i,2) ;
+			var libInfo = libs[libName]
+			return 	package.install(libName,libInfo,installPath)
+
+		}
+	}
+}
+
+winform.btnInstallProject.oncommand = function(id,event){
+	winform.btnInstallProject.disabled = true;
+	var err = installPackage(package._project_install_path)
+	if(err){
+		winform.msgErr("安装失败"+err)	
+	}else{
+		winform.msgOk("安装成功")
+	}
+
+	winform.btnInstallProject.disabled = false;
+}
+
+winform.btnInstallGlobal.oncommand = function(id,event){
+	winform.btnInstallGlobal.disabled = true
+	var err = installPackage(package._global_install_path)
+	if(err){
+		winform.msgErr("安装失败" + e)	
+	}else{
+		winform.msgOk("安装成功")
+	}
+
+	winform.btnInstallGlobal.disabled = false	
+}
+
+winform.show();
+win.loopMessage();
+return winform;
+/**intellisense()
+search() = search lib
+showLibsToTable(libs) = show libs on listview
+end intellisense**/

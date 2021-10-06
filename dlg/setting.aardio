@@ -1,0 +1,179 @@
+//setting 包管理
+import fonts.fontAwesome;
+import win.ui;
+/*DSG{{*/
+var winform = win.form(text="包管理";right=1040;bottom=607;border="thin")
+winform.add(
+btnDeselectAll={cls="button";text="取消全选";left=207;top=551;right=307;bottom=581;z=9};
+btnInstall={cls="button";text="更新";left=924;top=552;right=1024;bottom=582;z=10};
+btnRemove={cls="button";text="删除";left=810;top=552;right=910;bottom=582;z=11};
+btnSelectAll={cls="button";text="全选";left=90;top=551;right=190;bottom=581;z=8};
+editTomlPath={cls="edit";left=181;top=20;right=535;bottom=49;edge=1;multiline=1;z=4};
+listview={cls="listview";left=89;top=65;right=1025;bottom=535;edge=1;z=7};
+nviBar={cls="bkplus";left=0;top=-1;right=65;bottom=610;ah=1;bgcolor=11829830;dl=1;dr=1;dt=1;z=1};
+nviGlobal={cls="plus";text="全局";left=0;top=100;right=65;bottom=180;bkBottom=3;bkLeft=7;bkRight=8;bkTop=2;border={color=-65536};color=16777215;dl=1;dt=1;font=LOGFONT(h=-16);iconStyle={font=LOGFONT(h=-29;name='FontAwesome');padding={bottom=20}};iconText='\uF0AE';notify=1;textPadding={bottom=10};valign="bottom";x=0.5;y=0.2;z=3};
+nviLocal={cls="plus";text="工程";left=0;top=25;right=65;bottom=105;bkBottom=3;bkLeft=7;bkRight=8;bkTop=2;border={color=-65536};color=16777215;dl=1;dt=1;font=LOGFONT(h=-16);iconStyle={font=LOGFONT(h=-29;name='FontAwesome');padding={bottom=20}};iconText='\uF0AE';notify=1;textPadding={bottom=10};valign="bottom";x=0.5;y=0.2;z=2};
+openToml={cls="button";text="自定义";left=541;top=19;right=641;bottom=49;z=5};
+static={cls="static";text="配置文件路径:";left=93;top=26;right=181;bottom=52;transparent=1;z=6}
+)
+/*}}*/
+
+import ide
+import win.ui.tabs
+import config
+import string.toml
+import fsys
+import fsys.table
+import win.dlg.message
+import package
+
+
+
+
+//listview
+winform.listview.setExtended(0x4/*_LVS_EX_CHECKBOXES*/)
+winform.listview.insertColumn("扩展库",150) 
+winform.listview.insertColumn("版本",70) 
+winform.listview.insertColumn("本地版本",70) 
+winform.listview.insertColumn("作者",70)  
+winform.listview.insertColumn("说明",-1)
+//winform.listview.addItem({"1";"2";"3";"4";"5"})
+//tabs
+var tbs = win.ui.tabs(winform.nviLocal,winform.nviGlobal,winform.naviSystem)
+function getAmodTomlPath(){
+	package.switchConfigPath(tbs.selIndex)
+	winform.editTomlPath.text=config.toml.path
+}
+
+
+getAmodTomlPath()
+
+
+//show listview 
+var showListview = function(){
+	var libs = package.loadCacheLib()
+	winform.listview.clear();
+    winform.listview.redraw();
+	if( io.exist(config.toml.path)){ 
+		var installedLibs
+		var fileExt =fsys.getExtensionName(config.toml.path)
+		if(fileExt=="toml"){
+			var installConfig = string.toml.parse(string.load(config.toml.path)); 
+			installedLibs = installConfig.dependencies;
+		}else{
+			winform.msgWarn("配置文件错误")
+		}
+		for libName,lib in table.eachName(installedLibs){ 
+			var libInfo = {version:"";author:"";description:""}
+			if(libs && libs[libName]){
+				libInfo = libs[libName]	
+			}
+			var row = winform.listview.addItem( { libName;libInfo.version;installedLibs[libName] : "未安装";libInfo.author;libInfo.description } )
+			//winform.listview.setChecked(row,true)
+		} 
+	}
+	else {
+		..publish("log","获取失败")
+	} 	
+}
+
+
+//open toml file
+winform.openToml.oncommand = function(id,event){
+	import  fsys.dlg
+	var filePath=fsys.dlg.open("toml文件|*.toml|所有文件|*.*")
+	if(filePath){
+		config.toml.path=filePath
+		tbs.selIndex=null
+		getAmodTomlPath()
+	}
+}
+
+//全选
+winform.btnSelectAll.oncommand = function(id,event){ 
+	for(i=winform.listview.count;1;-1){
+		winform.listview.setChecked(i,true) 
+	}  
+}
+ //取消全选
+winform.btnDeselectAll.oncommand = function(id,event){
+	for(i=winform.listview.count;1;-1){
+		winform.listview.setChecked(i,false) 
+	} 	
+}
+
+
+
+winform.btnInstall.oncommand = function(id,event){
+	winform.btnInstall.disabled = true;
+	
+	var installedLibs = ide.getExtLibs(); 
+	for(i=winform.listview.count;1;-1){
+		if( winform.listview.getChecked(i) ){
+			var libName = winform.listview.getItemText(i,1) ;
+			var libVersion = winform.listview.getItemText(i,2) ;
+			var installVersion = installedLibs[libName][["version"]];
+			//installSystem(libName,libVersion,installVersion)
+		}
+	} 
+	
+	winform.text = "aardio扩展库安装程序 安装已完成" ;
+	ide.refreshStdLib();
+	winform.btnInstall.disabled = false;
+}
+
+
+
+winform.btnRemove.oncommand = function(id,event){
+	winform.btnRemove.disabled=true
+	for(i=winform.listview.count;1;-1){
+		if( winform.listview.getChecked(i) ){
+			var libName = winform.listview.getItemText(i,1) ;
+			var libPath,libDir
+			package.remove(libName)
+		
+		}
+	} 
+	showListview()
+	ide.refreshStdLib()
+	winform.btnRemove.disabled=false
+}
+
+
+//tbs styles
+tbs.skin({
+	background={
+		active=0xFFFFFFFF;
+		default=0x00FFFFFF;
+		hover=0x38FFFFFF
+	};
+	color={
+		default=0xFFFFFFFF; 
+	};
+	checked={
+		background={default=0xFFFFFFFF;};
+		color={default=0xFF42A875;};
+	}
+})
+//tabs on event
+tbs.selIndex=1
+config.toml.installedDir = package._project_install_path
+tbs.oncommand = function(strip,id,event){
+	getAmodTomlPath()
+	select(tbs.selIndex) {
+		case 1 {
+			config.toml.installedDir = package._project_install_path
+			..publish("log","切换到项目配置")
+		}
+		case 2 {
+			config.toml.installedDir = package._global_install_path
+			..publish("log","切换到全局配置")
+		}
+	}
+	config.saveAll()
+	showListview()
+}
+showListview()
+winform.show();
+win.loopMessage();
+return winform;

@@ -1,0 +1,298 @@
+﻿namespace package
+
+import config
+import ide
+import web.json 
+import string
+import fsys
+import string.toml
+import table
+import io
+import inet.http
+import package.downloadFile
+_amodDir =  ..io.appData("/aardio/amod")
+_cacheDir = ..io.appData("/aardio/amod/cache")
+
+_cacheSystemLibPath = fsys.joinpath(_amodDir,"systemLib.json")
+_cacheGithubLibPath =  fsys.joinpath(_amodDir,"githubLib.json")
+_global_config_path =  fsys.joinpath(..io._exedir,"extensions","amod.toml")
+_global_install_path = io.fullpath("~/lib")
+_project_install_path = fsys.joinpath(ide.getProjectDir(),"lib")	 
+
+getGlobalPath=function(){
+		return  _global_config_path
+}
+getLocalPath = function(){
+	var libDir = ide.getProjectDir()
+	return  fsys.joinpath(libDir,"amod.toml")
+
+}
+
+// check global or local toml
+switchConfigPath=function (index){
+	select(index) {
+		case 1 {
+			config.toml.path=getLocalPath()
+		}
+		case 2 {
+			config.toml.path=getGlobalPath()
+		}
+	}
+	config.saveAll()
+}
+
+
+loadCacheLib = function(){
+	import web.json;
+	var systemLibs,githubLibs = {},{}
+	if(io.exist(_cacheSystemLibPath)){
+		systemLibs =web.json.parse( string.load(_cacheSystemLibPath))
+	}
+	if(io.exist(_cacheGithubLibPath)){
+		githubLibs =web.json.parse( string.load(_cacheGithubLibPath))
+	}
+	return ..table.mix(systemLibs,githubLibs); 
+}
+
+update = function(){
+	//get all remote package listview
+	//save list to local cache
+	var err = null
+	try{
+		var libs = ide.requestLibInfo("all") //get aardio libs
+		string.save(_cacheSystemLibPath,web.json.stringify(libs))	
+	}
+	catch(e){
+		err = e
+	}
+	
+
+	//get remote libs
+	return  err; 
+}
+
+
+loadInstallLibs = function(){
+	//get local toml file
+	return {}
+}
+
+filterLib = function(keyword,libs){
+    	var k = keyword;
+    	if(#k) k = string.trim(k);
+   
+    	if(!#k){
+    		return libs;
+    	}
+    	keywords = string.splitEx(string.lower(k),"\s+");
+     	
+    	var result = {}
+
+    	for(name,libInfo in libs){ 
+    		for(i,k in keywords){
+    			if(libInfo.keywords){
+    				if(string.indexOf(string.lower(libInfo.keywords),k)) {
+    					result[name] = libInfo;
+    					continue;
+    				}
+    			}
+    			
+    			if(libInfo.description){
+    				if(string.indexOf(string.lower(libInfo.description),k)) {
+    					result[name] = libInfo;
+    					continue;
+    				}
+    			}
+    			
+    			if(libInfo.author){
+    				if(string.indexOf(libInfo.author,k)) {
+    					result[name] = libInfo;
+    					continue;
+    				}
+    			}
+    			
+    			if(string.indexOf(name,k)) {
+    				result[name] = libInfo;
+    				continue;
+    			}
+    		} 
+    	};
+
+		return result
+}
+// 和 io.libPath 差不多的功能只是把包名转换为路径 
+// 如果包存在则返回包路径
+// 如果包不存在返回包的父文件夹
+convLibPath = function(libName,basePath){
+	var sp = string.split(libName,".")
+	basePath = io.fullpath(basePath)
+	var path,parentDir;
+	path = basePath
+	for(i=1;#sp;1){
+		path = fsys.joinpath(path,sp[i])
+	}
+	if(io.exist(path)){
+		return path; 
+	}
+	path = path+".aardio"
+	if(io.exist(path)){
+		return path; 
+	}
+	parentDir = basePath
+	for(i=1;#sp-1;1){
+		parentDir = fsys.joinpath(parentDir,sp[i])
+	}
+
+	return  parentDir; 
+}
+
+//file link 创建文件硬连接目录软连接
+var createLink = function(linkPath,targetPath){
+	//直接复制到目录目录但是有个问题，就是电脑存在多个
+	//符号连接要提权才能进行复制 硬连接不能连接目录
+	//cmd mklink 测试不用提权 待测试
+	import  process.popen
+	import fsys
+	import string.template
+	linkPath = ..io.fullpath(linkPath)
+	targetPath = ..io.exist(targetPath)
+	
+	if(! targetPath) error("参数二目录路径不存在",2)
+	
+	//create base dir
+	if(!io.exist(linkPath)) io.createDir(linkPath)
+	
+	//join path fileName
+	var fileName = fsys.getFileName(targetPath)
+	linkPath = fsys.joinpath(linkPath,fileName)
+	
+	if(io.exist(linkPath)) error("创建链接失败！参数一目录已经有同名文件存在",2)
+	
+	// 参数 /j 表示符号链接目录 /h为硬链接 /d为符号链接文件要提权进行
+	var flag = fsys.isDir(targetPath)?"/J":"/H"
+	
+	var cmdTeplate = string.template(`mklink ${flag} ${linkPath} ${targetPath}`)
+	var cmdCerateLink =cmdTeplate.format(
+		flag = flag;
+		linkPath = linkPath;
+		targetPath = targetPath
+	)
+	
+	var prcs = process.popen.cmd(cmdCerateLink)
+	var err = prcs.readErr(-1)
+	prcs.close()
+	return  err; 
+}
+
+//install 
+var installForPath = function(libName,libPath,installPath){
+	createLink(libName,installPath,libPath)
+}
+var installForUrl = function(libName,downloadUrl,installPath){
+	//只下载压缩文件
+	var mutex = ..process.mutex("{5C6E466D-0DF1-4ABC-BFAD-9B890AA358FC}.lock.import." + libName,false,false);
+	mutex.wait(); {
+		var ok,libPath =package.downloadFile.download(downloadUrl,"amod 下载 "+libName+" 扩展库",_cacheDir, ,libName + ".tar.lzma");
+		if(!ok) error("下载解压出错",2)
+		createLink(installPath,libPath)
+		} mutex.release();
+}
+var installForGit = function(libPath,installPath){
+	
+}
+
+
+var writConifg = function(libName,version){
+	var tomlConfig = {}
+	var dependencies = {}
+	var tomlPath = config.toml.path
+	if(io.exist(tomlPath)){
+		tomlConfig=string.toml.parse(string.load(tomlPath))
+		dependencies = tomlConfig.dependencies
+	}
+	dependencies[libName] = version
+	tomlConfig.dependencies = dependencies
+	string.save(tomlPath,string.toml.stringify(tomlConfig))
+}
+
+
+//如果 installPath 没有传入则使用 config.toml.installedDir 
+install= function(libName,libInfo,installPath){
+	//安装优先级为 path url git
+	installPath = installPath : config.toml.installedDir
+	if(!installPath)error("安装路径不正确",2)
+	installPath = convLibPath(libName,installPath) //转换
+	var err = null
+	try{
+		if(libInfo.path){
+			return installForPath(libName,libInfo.path,installPath)
+		}
+	
+		if(libInfo.url){
+			return  installForUrl(libName,libInfo.url,installPath)	
+		}
+		
+		if(libInfo.git){
+			return installForGit(libName,libInfo.git,installPath)
+		}
+		//lockConfig()
+	}catch(e){
+		..publish("log",e)
+		 err  = e
+	}
+	writConifg(libName,libInfo.version)
+	return err ; 
+}
+
+
+
+function deleteLibFile(libName){
+	var libPath = convLibPath(libName,config.toml.installedDir)
+	import debug;
+	debug.debug()
+	var isDelete
+	if(io.exist(libPath)){
+		isDelete = fsys.delete(libPath)
+	}
+	return isDelete; 
+}
+function removeLibConfigToml(libName){
+	var dependencies = {}
+	var configTable =  string.toml.parse(string.load(config.toml.path))
+ 	for(k,v in configTable.dependencies){
+		if(k!=libName){
+			dependencies[k] = v
+		}
+	}
+	configTable.dependencies = dependencies
+	var isSave,err = ..string.save(config.toml.path, ..string.toml.stringify(configTable))
+	return isSave,err; 
+}
+remove = function(libName){
+	var isDelete = deleteLibFile(libName)
+	if(isDelete){
+		var isSave= removeLibConfigToml(libName)
+		if(!isSave) error("配置文件保存失败")
+		..publish("log",libName,":  删除成功")
+	}else{
+		..publish("log",libName,": 删除失败")
+	}
+}
+/**intellisense(package)
+_cacheSystemLibPath = system lib cache file path
+_cacheGithubLibPath = github lib chahe file path
+_global_config_path =  fsys.joinpath(..io._exedir,"extensions","amod.toml")
+_global_install_path = io.fullpath("~/lib")
+_project_install_path = fsys.joinpath(ide.getProjectDir(),"lib")	
+loadCacheLib() = load local libs json file to table return table
+getLocalPath() = get local toml path 
+getGlobalPath() = get global toml path
+convLibPath(libName,basePath) = conv lib install dir
+switchConfigPath(.(1)= 切换包安装显示路径 index{type number} 可选值为1=local, 2=global
+loadInstallLibs() = return installed libs
+update() = pull remote libs list to local cache file
+remove(libName) = remove lib
+filterLib(keywor,libs) = filter libs math keyword
+install(libName,libInfo,installDir) = install lib
+createLink (linkPath,targetPath)= 为 targetPath 创建链接，如果 targetPath 为文件则为硬链接，如果为目录则为符号链接
+end intellisense**/

@@ -1,0 +1,77 @@
+//REDEME
+
+import web.form;
+/*DSG{{*/
+var winform = win.form(cls="WIN_MARKDOWN";text="amod使用说明";right=1179;bottom=612;bgcolor=16777215;parent=...;scroll=1)
+winform.add(
+custom={cls="custom";text="自定义控件";left=200;top=0;right=1180;bottom=613;ah=1;aw=1;bgcolor=12632256;edge=1;z=2};
+lbHtmlPath={cls="static";left=312;top=592;right=758;bottom=611;db=1;dl=1;dr=1;nWrap=1;transparent=1;z=1};
+treeview={cls="treeview";left=2;top=0;right=197;bottom=612;ah=1;asel=false;bgcolor=16777215;border=1;clipch=1;z=3}
+)
+/*}}*/
+
+import string.gfmark; 
+import string.template;
+
+var wb = web.form( winform.custom, , , ,true/*securityTrusted*/ )
+
+var htmlStr = /****
+<!doctype html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link href="http://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.css" rel="stylesheet" type="text/css" />
+<style>
+	.markdown-body {
+		box-sizing: border-box;
+		min-width: 200px;
+		max-width: 980px;
+		margin: 0 auto;
+		padding: 45px;
+	}
+	@media (max-width: 767px) {
+		.markdown-body {
+			padding: 15px;
+		}
+	}
+</style>
+</head>
+<body>
+
+<article class="markdown-body">
+	${body}
+</article>
+</body>
+</html>
+
+****/
+
+
+function showMD(filePath){
+	var md =string.load(filePath);
+	var body = string.gfmark.render(md);
+	
+	var templateHtml = string.template(htmlStr);
+	var html = templateHtml.format(
+		body = body;
+	);
+	wb.html=html;
+}
+
+
+
+import win.ui.explorer;
+var explorer = win.ui.explorer( winform.treeview );
+
+showMD(io.fullpath("/README.md"))
+
+explorer.loadFile(io.fullpath("/"),"*.md")
+
+explorer.onClick = function(filePath,hItem ){
+    if( !fsys.isDir( filePath ) ){
+        showMD(filePath)
+    }
+
+}
+winform.show();
+win.loopMessage();  
