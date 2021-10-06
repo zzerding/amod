@@ -113,37 +113,37 @@ winform.editKeyword.onChange = function(){
 }
 
 var installPackage = function(installPath){
+	if(table.count(winform.listview.checked)==0){
+		return "未选中包"; 
+	}
+	var messages = ""
 	for(i=winform.listview.count;1;-1){
 		if( winform.listview.getChecked(i) ){
 			var libName = winform.listview.getItemText(i,1) ;
 			var libVersion = winform.listview.getItemText(i,2) ;
 			var libInfo = libs[libName]
-			return 	package.install(libName,libInfo,installPath)
-
+			var msg = package.install(libName,libInfo,installPath)
+			messages = string.concat(messages,libName,libVersion,msg,'\n')
 		}
 	}
+	search()
+	return messages; 
 }
 
 winform.btnInstallProject.oncommand = function(id,event){
 	winform.btnInstallProject.disabled = true;
-	var err = installPackage(package._project_install_path)
-	if(err){
-		winform.msgErr("安装失败"+err)	
-	}else{
-		winform.msgOk("安装成功")
-	}
+	config.toml.path = package._project_config_path
+	var msg = installPackage(package._project_install_path)
+	winform.msgInfo(msg)	
 
 	winform.btnInstallProject.disabled = false;
 }
 
 winform.btnInstallGlobal.oncommand = function(id,event){
 	winform.btnInstallGlobal.disabled = true
-	var err = installPackage(package._global_install_path)
-	if(err){
-		winform.msgErr("安装失败" + e)	
-	}else{
-		winform.msgOk("安装成功")
-	}
+	config.toml.path = package._global_config_path
+	var msg = installPackage(package._global_install_path)
+	winform.msgInfo(msg)
 
 	winform.btnInstallGlobal.disabled = false	
 }

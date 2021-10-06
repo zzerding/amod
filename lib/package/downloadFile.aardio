@@ -1,2 +1,129 @@
-﻿
+﻿//package.downloadFile tar 文件下载
+//TODO 不要重复下载
+//包存诸路径加上版本号
 namespace package.downloadFile
+download = function(url,title="下载",saveDir,extraDir,saveName,parentForm){
+	var tUrl = ..inet.url.split(url);
+	if(!tUrl){
+		error("错误的URL参数",2)
+	}
+	var tPath = ..io.splitpath(tUrl.path)
+	
+	saveDir = ..io.fullpath(saveDir : "~\download\" )
+	..fsys.createDir(saveDir);
+	
+	if(!saveName){
+		saveName = tPath.file;
+	}
+	if(!extraDir){
+		extraDir = ..string.match(saveName,"(.+)\.[^\.]+$"  );
+		if(!extraDir) extraDir = saveName + ".uncompress";
+		extraDir = ..fsys.joinpath(saveDir,extraDir)
+	}
+	else {
+		extraDir = ..io.fullpath(extraDir);
+	} 
+	var pathCabinet = ..fsys.joinpath(saveDir,saveName)
+	var tarTempName = pathCabinet + ".tar";
+	var downBox = ..inet.downBox(parentForm,title,false) 
+	downBox.headers = self.headers;
+	downBox.referer = self.referer;
+	downBox.userAgent = self.userAgent;
+	downBox.preget = self.preget;
+	
+	downBox.endProc = function(){
+		downBox.text = "正在解压缩:" + saveName; 
+		..win.peekPumpInputMessage();
+		
+   
+		downBox.progress.hide = false;
+		 
+		var processed = 0;
+		var step = downBox.contentLength / 1000;
+		downBox.progress.setProgressRange(1,1000);  
+		
+		var peekMsg = ..win.peekPumpMessage;
+		
+		if(..string.match(saveName,"<.lzma>$")){
+			var ret = ..sevenZip.lzma.decodeFile(pathCabinet,tarTempName,function(inProcessed,outProcessed){ 
+			if( (peekMsg()!==null) && downBox.continueModal ){
+			 	processed = processed + inProcessed; 
+			 	downBox.progress.progressPos = processed / step;
+			}
+			else {
+				return true;
+			}
+			
+			} ); 
+			
+			if(!ret){
+				owner.complete = false;
+				owner.endModal(); 
+				return;
+			} 
+		}
+		
+		downBox.onClose = function(){ 
+			return false;
+		}
+		downBox.text = "正在展开:" + saveName; 
+		var tarFile = ..fsys.untar(tarTempName,extraDir);
+		tarFile.onProgressFile = function(path){
+			downBox.labInfo.text = path;
+		};
+		  
+		downBox.progress.setProgressRange(1,1000 ); 
+		for(fileName,writeSize,remainSize,pos in tarFile.eachBlock(1000) ){ 
+			if( peekMsg()!==null ){
+				downBox.progress.progressPos = pos;
+			}
+			else {
+				break ;
+			} 
+		}
+		
+		tarFile.close()
+		..io.remove( tarTempName );
+		downBox.onClose = null;
+		if(tarFile.complete){
+			owner.endModal(); 
+		}
+		else {
+			downBox.text = tarFile.lastError
+		} 
+	}
+	
+	
+	downBox.download(url,pathCabinet,null,null,"" ) 
+	
+	if(!downBox.complete){ 
+		return;
+	} 
+	
+	if( ! ..io.exist(pathCabinet,4) ){  
+		return false; 
+	} 
+ 	var fileRootDir;
+ 	..fsys.enum( extraDir, "*.*",
+ 		function(dir,filename,fullpath,findData){ 
+ 			if(filename){ 
+ 				fileRootDir = dir;
+ 	           	return false;
+ 			} 
+ 		}  
+ 	,false);
+
+ 	if(!fileRootDir)return;
+ 	
+ 	var setupFile = ..fsys.joinpath(fileRootDir,"setup.dl.aardio")
+	if( ..io.exist(setupFile) ){
+		..fsys.delete(setupFile)	
+	}
+	var libFullPath;
+	..fsys.enum( fileRootDir, "*.*",
+		function(dir,filename,fullpath,findData){ 
+			libFullPath=fullpath
+		}
+	,false);
+	return true,libFullPath; 		
+}

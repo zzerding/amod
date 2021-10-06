@@ -12,19 +12,19 @@ import inet.http
 import package.downloadFile
 _amodDir =  ..io.appData("/aardio/amod")
 _cacheDir = ..io.appData("/aardio/amod/cache")
-
+var projectDir = ide.getProjectDir()
 _cacheSystemLibPath = fsys.joinpath(_amodDir,"systemLib.json")
 _cacheGithubLibPath =  fsys.joinpath(_amodDir,"githubLib.json")
 _global_config_path =  fsys.joinpath(..io._exedir,"extensions","amod.toml")
+_project_config_path =  fsys.joinpath( projectDir,"amod.toml")
 _global_install_path = io.fullpath("~/lib")
-_project_install_path = fsys.joinpath(ide.getProjectDir(),"lib")	 
+_project_install_path = fsys.joinpath(projectDir,"lib")	 
 
 getGlobalPath=function(){
 		return  _global_config_path
 }
 getLocalPath = function(){
-	var libDir = ide.getProjectDir()
-	return  fsys.joinpath(libDir,"amod.toml")
+	return _project_config_path
 
 }
 
@@ -121,29 +121,30 @@ filterLib = function(keyword,libs){
 		return result
 }
 // 和 io.libPath 差不多的功能只是把包名转换为路径 
-// 如果包存在则返回包路径
-// 如果包不存在返回包的父文件夹
+//返回包的父文件夹 和 包位置;如果包位置不存在返回null
 convLibPath = function(libName,basePath){
 	var sp = string.split(libName,".")
 	basePath = io.fullpath(basePath)
-	var path,parentDir;
-	path = basePath
-	for(i=1;#sp;1){
-		path = fsys.joinpath(path,sp[i])
-	}
-	if(io.exist(path)){
-		return path; 
-	}
-	path = path+".aardio"
-	if(io.exist(path)){
-		return path; 
-	}
+	var libPath,parentDir;
+	
 	parentDir = basePath
 	for(i=1;#sp-1;1){
 		parentDir = fsys.joinpath(parentDir,sp[i])
 	}
+	libPath = basePath
+	for(i=1;#sp;1){
+		libPath = fsys.joinpath(libPath,sp[i])
+	}
+	if(io.exist(libPath)){
+		return parentDir,libPath; 
+	}
+	libPath = libPath+".aardio"
+	if(io.exist(libPath)){
+		return parentDir,libPath; 
+	}
 
-	return  parentDir; 
+
+	return  parentDir,null; 
 }
 
 //file link 创建文件硬连接目录软连接
@@ -216,40 +217,39 @@ var writConifg = function(libName,version){
 }
 
 
+
 //如果 installPath 没有传入则使用 config.toml.installedDir 
 install= function(libName,libInfo,installPath){
 	//安装优先级为 path url git
 	installPath = installPath : config.toml.installedDir
+	
 	if(!installPath)error("安装路径不正确",2)
-	installPath = convLibPath(libName,installPath) //转换
-	var err = null
+	installPath,libPath = convLibPath(libName,installPath) //转换
+	if(libPath) return libName+"  已经存在"
+	var _,globalLibPath = package.convLibPath(libName,_global_install_path)
+	if(globalLibPath) return libName+"  已全局安装"
+	var err = "安装成功"
 	try{
 		if(libInfo.path){
-			return installForPath(libName,libInfo.path,installPath)
+			 installForPath(libName,libInfo.path,installPath)
+		}else if(libInfo.url){
+			 installForUrl(libName,libInfo.url,installPath)	
+		}else if(libInfo.git){
+			 installForGit(libName,libInfo.git,installPath)
 		}
-	
-		if(libInfo.url){
-			return  installForUrl(libName,libInfo.url,installPath)	
-		}
-		
-		if(libInfo.git){
-			return installForGit(libName,libInfo.git,installPath)
-		}
+		writConifg(libName,libInfo.version)
 		//lockConfig()
 	}catch(e){
-		..publish("log",e)
-		 err  = e
+		removeLibConfigToml(libName)
+		err  = e
 	}
-	writConifg(libName,libInfo.version)
 	return err ; 
 }
 
 
 
 function deleteLibFile(libName){
-	var libPath = convLibPath(libName,config.toml.installedDir)
-	import debug;
-	debug.debug()
+	var libDir,libPath = convLibPath(libName,config.toml.installedDir)
 	var isDelete
 	if(io.exist(libPath)){
 		isDelete = fsys.delete(libPath)
@@ -275,13 +275,15 @@ remove = function(libName){
 		if(!isSave) error("配置文件保存失败")
 		..publish("log",libName,":  删除成功")
 	}else{
-		..publish("log",libName,": 删除失败")
+		removeLibConfigToml(libName)
+		..publish("log",libName,": 删除失败包已经不存在或者被占用，请手动检查")
 	}
 }
 /**intellisense(package)
 _cacheSystemLibPath = system lib cache file path
 _cacheGithubLibPath = github lib chahe file path
 _global_config_path =  fsys.joinpath(..io._exedir,"extensions","amod.toml")
+_project_config_path = fsys.joinpath( projectDir,"amod.toml"
 _global_install_path = io.fullpath("~/lib")
 _project_install_path = fsys.joinpath(ide.getProjectDir(),"lib")	
 loadCacheLib() = load local libs json file to table return table
