@@ -1,23 +1,30 @@
 import win.ui;
 import fonts.fontAwesome;
 /*DSG{{*/
-var winform = win.form(text="aardio form";right=759;bottom=469)
+var winform = win.form(text="aardio form";right=1040;bottom=606)
 winform.add(
-btnNewLib={cls="plus";text="新建";left=538;top=338;right=650;bottom=383;notify=1;z=7};
-editLibName={cls="plus";left=193;top=49;right=503;bottom=79;align="left";border={color=-16711681;width=1};editable=1;iconColor=255;iconStyle={align="right";font=LOGFONT(h=-19;name='FontAwesome');padding={top=2;right=5}};iconText='\uF05E';notify=1;tabstop=1;textPadding={left=5;top=5};z=1};
-libVersion={cls="plus";left=194;top=93;right=504;bottom=123;align="left";border={color=-16711681;width=1};editable=1;iconColor=255;iconStyle={align="right";font=LOGFONT(h=-19;name='FontAwesome');padding={top=2;right=5}};iconText='\uF05E';notify=1;tabstop=1;textPadding={left=5;top=5};z=4};
-plus={cls="plus";text="包名：";left=122;top=49;right=185;bottom=79;align="right";color=255;z=3};
-plus3={cls="plus";left=514;top=93;right=664;bottom=123;align="left";color=255;z=5};
-plus4={cls="plus";text="版本：";left=123;top=93;right=186;bottom=123;align="right";color=255;z=6};
-textLibName={cls="plus";left=513;top=49;right=663;bottom=79;align="left";color=255;z=2}
+btnGlobalInsall={cls="plus";text="全局安装";left=100;top=247;right=191;bottom=280;bgcolor=11580047;border={radius=5;width=1};notify=1;z=7};
+btnProjectInstall={cls="plus";text="项目安装";left=283;top=248;right=374;bottom=281;border={radius=5;width=1};notify=1;z=8};
+combobox={cls="combobox";left=94;top=139;right=404;bottom=165;items={};mode="dropdown";z=9};
+editLibName={cls="plus";left=94;top=49;right=404;bottom=75;align="left";border={color=-16711681;width=1};editable=1;iconColor=255;iconStyle={align="right";font=LOGFONT(h=-19;name='FontAwesome');padding={top=2;right=5}};iconText='\uF05E';notify=1;tabstop=1;textPadding={left=5;top=5;right=25};z=11};
+libVersion={cls="plus";left=94;top=93;right=403;bottom=119;align="left";border={color=-16711681;width=1};editable=1;iconColor=255;iconStyle={align="right";font=LOGFONT(h=-19;name='FontAwesome');padding={top=2;right=5}};iconText='\uF05E';notify=1;tabstop=1;textPadding={left=5;top=5;right=25};z=4};
+plus={cls="plus";text="包名：";left=23;top=49;right=86;bottom=79;align="right";color=16776960;z=3};
+plus2={cls="plus";text="选择类型：";left=9;top=136;right=87;bottom=166;align="right";color=16776960;z=10};
+plus4={cls="plus";text="版本：";left=24;top=93;right=87;bottom=123;align="right";color=16776960;z=6};
+textLibName={cls="plus";left=414;top=49;right=564;bottom=79;align="left";color=255;z=2};
+textPath={cls="plus";left=414;top=184;right=564;bottom=214;align="left";color=255;z=1};
+textVersion={cls="plus";left=414;top=93;right=564;bottom=123;align="left";color=255;z=5}
 )
 /*}}*/
 
+import style
 import package;
+import  fsys.dlg
+import win.dlg.message
 var libs = package.loadCacheLib()
 
 import win.debounce
-switchPlugIcon = win.debounce(function(plus,status){
+switchPlugIcon = function(plus,status){
 	if(status){
 		plus.iconText='\uF05D'
 		plus.iconColor=0xFF54A878
@@ -25,8 +32,8 @@ switchPlugIcon = win.debounce(function(plus,status){
 		plus.iconText='\uF05E'
 		plus.iconColor=0xFFFF0000
 	}
+}
 
-},300)
 
 
 winform.editLibName.onStateChange =  function(hFocus){
@@ -42,27 +49,99 @@ winform.editLibName.onStateChange =  function(hFocus){
 	} 
 	switchPlugIcon(winform.editLibName,status)
 }
+winform.libVersion.onStateChange = function(state){
+	var version = winform.libVersion.text
+	winform.textVersion.text=""
+	var status = true
+	if(#version==0){
+		status = false; 
+		winform.textVersion.text="版本号不能为空"
+	} 
+	switchPlugIcon(winform.libVersion,status)
+}
+var comBoxList = {'url','git','filePath'}
 
-winform.btnNewLib.skin(
-	background = { 
-		hover = "/res/images/btn-hover.png";
-		focus = "/res/images/btn-focus.jpg";
-		active = "/res/images/btn-active.png";
-		disabled = "/res/images/btn-disabled.png"; 
+winform.combobox.onDropDown= function(){ 
+	winform.combobox.autoComplete(comBoxList) //更新下拉列表
+}
+
+var removeCls = function(){
+	winform.remove("textHint","btnOpenFile","editPath")
+}
+
+
+var addFileCls = function(){
+	removeCls()
+	winform.add(
+		btnFileOpen={cls="plus";left=94;top=185;right=124;bottom=211;align="left";border={left=1;top=1;bottom=1;color=-16711681};iconColor=11580047;iconStyle={align="right";font=LOGFONT(h=-19;name='FontAwesome');padding={top=2;right=5}};iconText='\uF07B';notify=1;tabstop=1;textPadding={left=5;top=5};z=11}; 
+		editPath={cls="plus";left=124;top=185;right=404;bottom=211;align="left";border={top=1;bottom=1;right=1;color=-16711681};editable=1;iconColor=255;iconStyle={align="right";font=LOGFONT(h=-19;name='FontAwesome');padding={top=2;right=5}};iconText='\uF05E';notify=1;tabstop=1;textPadding={left=5;top=5;right=25};z=12};
+		textHint={cls="plus";text="文件路径：";left=9;top=185;right=87;bottom=215;align="right";color=16776960;z=12};
+	)
+	winform.btnFileOpen.skin({
+		background={
+			hover=0xFF928BB3;
+			disabled=0xFFCCCCCC; 
+		}
+	})
+	winform.btnFileOpen.oncommand = function(id,event){
+		//打开文件
+		var dir=fsys.dlg.open("aardio 文件或者库目录|*.aardio","选择aardio 文件或者库目录","/",winform,)
+		if(!dir){
+			winform.msgWarn("取消打开")
+		}
+		winform.editPath.text = dir
 	}
-)
-winform.btnNewLib.oncommand = function(id,event){
 	
 }
-winform.btnNewLib.skin({
-	background={
-		active=0xFF0087E3;
-		default=0xFF00D0FF;
-		disabled=0xFFFF4D31;
-		focus=0xFFE3E3E3;
-		hover=0xFF0093FF
+var addGitCls = function(){
+	removeCls()
+	winform.add( 
+		editPath={cls="plus";left=94;top=185;right=404;bottom=211;align="left";border={color=-16711681;width=1};editable=1;iconColor=255;iconStyle={align="right";font=LOGFONT(h=-19;name='FontAwesome');padding={top=2;right=5}};iconText='\uF05E';notify=1;tabstop=1;textPadding={left=5;top=5;right=25};z=11};
+		textHint={cls="plus";text="仓库地址：";left=9;top=185;right=87;bottom=215;align="right";color=16776960;z=12};
+	)
+	winform.editPath.onStateChange = function(state){
+		
 	}
-})
+}
+var addUrlCls = function(){
+	removeCls()
+	winform.add( 
+		editPath={cls="plus";left=94;top=185;right=404;bottom=211;align="left";border={color=-16711681;width=1};editable=1;iconColor=255;iconStyle={align="right";font=LOGFONT(h=-19;name='FontAwesome');padding={top=2;right=5}};iconText='\uF05E';notify=1;tabstop=1;textPadding={left=5;top=5;right=25};z=11};
+		textHint={cls="plus";text="包网址：";left=9;top=185;right=87;bottom=215;align="right";color=16776960;z=12};
+	)
+	winform.editPath.onStateChange = function(state){
+		
+	}
+}
+
+
+winform.combobox.onListChange= function(){ 
+	var selectText = winform.combobox.selText
+	select(selectText) {
+		case 'url' {
+			addUrlCls()
+			
+		}
+		case 'git' {
+			addGitCls()
+		}
+		case 'filePath'{
+			..publish("log","选择 aardio 文件，如果库为目录那么选择库的_.aardio 文件")
+			addFileCls()
+		}
+	}
+}
+
+winform.btnGlobalInsall.skin(style.primaryButton)
+winform.btnGlobalInsall.oncommand = function(id,event){
+		import console
+		console.log("1")
+}
+
+
+
+
+winform.btnProjectInstall.skin(style.primaryButton)
 winform.show();
 win.loopMessage();
 return winform;
