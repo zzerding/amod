@@ -9,7 +9,7 @@ btnInstall={cls="button";text="更新";left=924;top=552;right=1024;bottom=582;z=
 btnRemove={cls="button";text="删除";left=810;top=552;right=910;bottom=582;z=11};
 btnSelectAll={cls="button";text="全选";left=90;top=551;right=190;bottom=581;z=8};
 editTomlPath={cls="edit";left=181;top=20;right=535;bottom=49;edge=1;multiline=1;z=4};
-listview={cls="listview";left=89;top=65;right=1025;bottom=535;edge=1;z=7};
+listview={cls="listview";left=89;top=65;right=1025;bottom=535;edge=1;fullRow=1;z=7};
 nviBar={cls="bkplus";left=0;top=-1;right=65;bottom=610;ah=1;bgcolor=11829830;dl=1;dr=1;dt=1;z=1};
 nviGlobal={cls="plus";text="全局";left=0;top=100;right=65;bottom=180;bkBottom=3;bkLeft=7;bkRight=8;bkTop=2;border={color=-65536};color=16777215;dl=1;dt=1;font=LOGFONT(h=-16);iconStyle={font=LOGFONT(h=-29;name='FontAwesome');padding={bottom=20}};iconText='\uF0AE';notify=1;textPadding={bottom=10};valign="bottom";x=0.5;y=0.2;z=3};
 nviLocal={cls="plus";text="工程";left=0;top=25;right=65;bottom=105;bkBottom=3;bkLeft=7;bkRight=8;bkTop=2;border={color=-65536};color=16777215;dl=1;dt=1;font=LOGFONT(h=-16);iconStyle={font=LOGFONT(h=-29;name='FontAwesome');padding={bottom=20}};iconText='\uF0AE';notify=1;textPadding={bottom=10};valign="bottom";x=0.5;y=0.2;z=2};
@@ -30,14 +30,11 @@ import package
 
 
 
-//listview
-winform.listview.setExtended(0x4/*_LVS_EX_CHECKBOXES*/)
-winform.listview.insertColumn("扩展库",150) 
-winform.listview.insertColumn("版本",70) 
-winform.listview.insertColumn("本地版本",70) 
-winform.listview.insertColumn("作者",70)  
-winform.listview.insertColumn("说明",-1)
-//winform.listview.addItem({"1";"2";"3";"4";"5"})
+//cerate listview
+import listview
+listview(winform.listview,winform)
+
+
 //tabs
 var tbs = win.ui.tabs(winform.nviLocal,winform.nviGlobal,winform.naviSystem)
 function getAmodTomlPath(){
@@ -50,7 +47,7 @@ getAmodTomlPath()
 
 
 //show listview 
-var showListview = function(){
+showListview = function(){
 	var libs = package.loadCacheLib()
 	winform.listview.clear();
     winform.listview.redraw();
@@ -116,8 +113,6 @@ winform.btnInstall.oncommand = function(id,event){
 			//installSystem(libName,libVersion,installVersion)
 		}
 	} 
-	
-	winform.text = "aardio扩展库安装程序 安装已完成" ;
 	ide.refreshStdLib();
 	winform.btnInstall.disabled = false;
 }
@@ -136,6 +131,7 @@ winform.btnRemove.oncommand = function(id,event){
 	} 
 	showListview()
 	ide.refreshStdLib()
+	ide.refreshUserLib()
 	winform.btnRemove.disabled=false
 }
 
@@ -173,13 +169,12 @@ tbs.oncommand = function(strip,id,event){
 	config.saveAll()
 	showListview()
 }
+
+
+winform.reloadList = showListview
 showListview()
 
-winform.onActivate = function(state,hwndOther,minimized){
-	if(state){
-		showListview()	
-	}
-}
+
 winform.show();
 win.loopMessage();
 return winform;

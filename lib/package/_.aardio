@@ -1,10 +1,11 @@
-﻿namespace package
-
+﻿
+namespace package
 import config
 import ide
 import web.json 
 import string
 import fsys
+import fsys.log
 import string.toml
 import table
 import io
@@ -19,6 +20,20 @@ _global_config_path =  fsys.joinpath(..io._exedir,"extensions","amod.toml")
 _project_config_path =  fsys.joinpath( projectDir,"amod.toml")
 _global_install_path = io.fullpath("~/lib")
 _project_install_path = fsys.joinpath(projectDir,"lib")	 
+_log_path = fsys.joinpath(_amodDir,"amod.log")
+
+
+function checkLogSize(size){
+	if(io.exist(_log_path)){
+		var f = io.open(_log_path,"r")
+		if(f.size(1) > size){
+			fsys.delete(_log_path) //only log file	
+		}
+	}
+}
+checkLogSize(0x20000)
+
+var log = fsys.log(_log_path)
 
 getGlobalPath=function(){
 		return  _global_config_path
@@ -69,12 +84,6 @@ update = function(){
 
 	//get remote libs
 	return  err; 
-}
-
-
-loadInstallLibs = function(){
-	//get local toml file
-	return {}
 }
 
 filterLib = function(keyword,libs){
@@ -191,11 +200,12 @@ var installForPath = function(libName,libPath,installPath){
 }
 var installForUrl = function(libName,downloadUrl,installPath){
 	//只下载压缩文件
-	var mutex = ..process.mutex("{5C6E466D-0DF1-4ABC-BFAD-9B890AA358FC}.lock.import." + libName,false,false);
+	var mutex = ..process.mutex("{4F4ED831-0B97-4EC2-BAC7-A616051108FC}.lock.import." + libName,false,false);
 	mutex.wait(); {
-		var ok,libPath =package.downloadFile.download(downloadUrl,"amod 下载 "+libName+" 扩展库",_cacheDir, ,libName + ".tar.lzma");
-		if(!ok) error("下载解压出错",2)
-		createLink(installPath,libPath)
+			var ok,libPath =package.downloadFile.download(downloadUrl,"amod 下载 "+libName+" 扩展库",_cacheDir, ,libName + ".tar.lzma");
+			if(!ok) error("下载解压出错",2)
+			createLink(installPath,libPath)
+
 		} mutex.release();
 }
 var installForGit = function(libPath,installPath){
@@ -203,32 +213,41 @@ var installForGit = function(libPath,installPath){
 }
 
 
-var writConifg = function(libName,version){
+readConfig = function(tomlPath){
 	var tomlConfig = {}
-	var dependencies = {}
-	var tomlPath = config.toml.path
+	tomlPath = tomlPath || config.toml.path
 	if(io.exist(tomlPath)){
 		tomlConfig=string.toml.parse(string.load(tomlPath))
-		dependencies = tomlConfig.dependencies
 	}
-	dependencies[libName] = version
-	tomlConfig.dependencies = dependencies
+	return tomlConfig; 
+}
+
+loadInstallLibs = function(tomlPath){
+		tomlConfig = tomlPath || readConfig()
+		return tomlConfig.dependencies; 
+}
+
+writConifg = function(libName,libInfo,tomlPath){
+	var tomlConfig = readConfig()
+	tomlPath =tomlPath||  config.toml.path
+	tomlConfig.dependencies[libName] = libInfo
 	string.save(tomlPath,string.toml.stringify(tomlConfig))
 }
 
 
 
 //如果 installPath 没有传入则使用 config.toml.installedDir 
-install= function(libName,libInfo,installPath){
+installLib= function(libName,libInfo,installPath){
 	//安装优先级为 path url git
 	installPath = installPath : config.toml.installedDir
-	
-	if(!installPath)error("安装路径不正确",2)
-	installPath,libPath = convLibPath(libName,installPath) //转换
-	if(libPath) return libName+"  已经存在"
+	var err
+	if(!io.exist(installPath)) return "安装路径不存在"; 
+	var libPath
+	installPath,libPath = convLibPath(libName,installPath)
+	if(libPath) return  libName+"  存在未更新";
+		
 	var _,globalLibPath = package.convLibPath(libName,_global_install_path)
 	if(globalLibPath) return libName+"  已全局安装"
-	var err = "安装成功"
 	try{
 		if(libInfo.path){
 			 installForPath(libName,libInfo.path,installPath)
@@ -237,29 +256,51 @@ install= function(libName,libInfo,installPath){
 		}else if(libInfo.git){
 			 installForGit(libName,libInfo.git,installPath)
 		}
-		writConifg(libName,libInfo.version)
-		//lockConfig()
+		//lock Config()
 	}catch(e){
-		removeLibConfigToml(libName)
-		err  = e
+		err = e
+		log.print(e)
 	}
-	return err ; 
+	return err; 
+}
+
+install= function(installPath,tomlPath){
+	var libs=loadCacheLib()
+	var installLibs = loadInstallLibs(tomlPath)
+	var logs = ""
+	for libName,v in ..table.eachName(installLibs){
+		var libInfo
+		if(type(v)==type.string){
+			libInfo=libs[libName]
+		}else{
+			libInfo = v
+		}
+		if(libInfo){
+			var err=installLib(libName,libInfo,installPath)
+			msg = err ? err : "安装成功"
+			logs = string.concat(logs,libName,libInfo.version,msg,'\n')
+		}
+	}
+	return logs; 
 }
 
 
 
-function deleteLibFile(libName){
-	var libDir,libPath = convLibPath(libName,config.toml.installedDir)
+function deleteLibFile(libName,installPath){
+	installPath = installPath || config.toml.installedDir
+	var libDir,libPath = convLibPath(libName,installPath)
 	var isDelete
 	if(io.exist(libPath)){
 		isDelete = fsys.delete(libPath)
 	}
 	return isDelete; 
 }
-function removeLibConfigToml(libName){
+
+removeLibConfig=function(libName,tomlPath){
+	tomlPath = tomlPath || config.toml.path
 	var dependencies = {}
-	var configTable =  string.toml.parse(string.load(config.toml.path))
- 	for(k,v in configTable.dependencies){
+	var configTable =  string.toml.parse(string.load(tomlPath))
+ 	for(k,v in table.eachName(configTable.dependencies)){
 		if(k!=libName){
 			dependencies[k] = v
 		}
@@ -268,17 +309,23 @@ function removeLibConfigToml(libName){
 	var isSave,err = ..string.save(config.toml.path, ..string.toml.stringify(configTable))
 	return isSave,err; 
 }
-remove = function(libName){
+remove  = function(libName){
 	var isDelete = deleteLibFile(libName)
+	var msg;
 	if(isDelete){
-		var isSave= removeLibConfigToml(libName)
-		if(!isSave) error("配置文件保存失败")
-		..publish("log",libName,":  删除成功")
+		var isSave,err= removeLibConfig(libName)
+		if(!isSave){
+			msg = "配置文件保存失败"
+			log.print(err)
+		} 
+		msg = libName+":  删除成功"
 	}else{
-		removeLibConfigToml(libName)
-		..publish("log",libName,": 删除失败包已经不存在或者被占用，请手动检查")
+		msg = libName+": 删除失败包已经不存在或者被占用，请手动检查"
 	}
+	..publish("log",msg)
+	return msg; 
 }
+
 /**intellisense(package)
 _cacheSystemLibPath = system lib cache file path
 _cacheGithubLibPath = github lib chahe file path
@@ -286,9 +333,16 @@ _global_config_path =  fsys.joinpath(..io._exedir,"extensions","amod.toml")
 _project_config_path = fsys.joinpath( projectDir,"amod.toml"
 _global_install_path = io.fullpath("~/lib")
 _project_install_path = fsys.joinpath(ide.getProjectDir(),"lib")	
+
 loadCacheLib() = load local libs json file to table return table
 getLocalPath() = get local toml path 
 getGlobalPath() = get global toml path
+
+readConfig() = read toml to table
+loadInstallLibs() = read toml to  dependencies to table
+writConifg(.(libName,libInfo,tomlPath) = writ lib info  to toml config dependencies node
+removeLibConfig(libName) = delete dependencies[libName] node
+
 convLibPath(libName,basePath) = conv lib install dir
 switchConfigPath(.(1)= 切换包安装显示路径 index{type number} 可选值为1=local, 2=global
 loadInstallLibs() = return installed libs
@@ -296,5 +350,7 @@ update() = pull remote libs list to local cache file
 remove(libName) = remove lib
 filterLib(keywor,libs) = filter libs math keyword
 install(libName,libInfo,installDir) = install lib
+installAll(installPath) = install all libs for toml config
 createLink (linkPath,targetPath)= 为 targetPath 创建链接，如果 targetPath 为文件则为硬链接，如果为目录则为符号链接
+
 end intellisense**/

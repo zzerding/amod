@@ -1,9 +1,68 @@
 import win.ui;
+import fonts.fontAwesome;
 /*DSG{{*/
 var winform = win.form(text="aardio form";right=759;bottom=469)
-winform.add()
+winform.add(
+btnNewLib={cls="plus";text="新建";left=538;top=338;right=650;bottom=383;notify=1;z=7};
+editLibName={cls="plus";left=193;top=49;right=503;bottom=79;align="left";border={color=-16711681;width=1};editable=1;iconColor=255;iconStyle={align="right";font=LOGFONT(h=-19;name='FontAwesome');padding={top=2;right=5}};iconText='\uF05E';notify=1;tabstop=1;textPadding={left=5;top=5};z=1};
+libVersion={cls="plus";left=194;top=93;right=504;bottom=123;align="left";border={color=-16711681;width=1};editable=1;iconColor=255;iconStyle={align="right";font=LOGFONT(h=-19;name='FontAwesome');padding={top=2;right=5}};iconText='\uF05E';notify=1;tabstop=1;textPadding={left=5;top=5};z=4};
+plus={cls="plus";text="包名：";left=122;top=49;right=185;bottom=79;align="right";color=255;z=3};
+plus3={cls="plus";left=514;top=93;right=664;bottom=123;align="left";color=255;z=5};
+plus4={cls="plus";text="版本：";left=123;top=93;right=186;bottom=123;align="right";color=255;z=6};
+textLibName={cls="plus";left=513;top=49;right=663;bottom=79;align="left";color=255;z=2}
+)
 /*}}*/
 
+import package;
+var libs = package.loadCacheLib()
+
+import win.debounce
+switchPlugIcon = win.debounce(function(plus,status){
+	if(status){
+		plus.iconText='\uF05D'
+		plus.iconColor=0xFF54A878
+	}else{
+		plus.iconText='\uF05E'
+		plus.iconColor=0xFFFF0000
+	}
+
+},300)
+
+
+winform.editLibName.onStateChange =  function(hFocus){
+	var libName = winform.editLibName.text
+	var status = !libs[libName]
+	winform.textLibName.text=""
+	if(!status){
+		winform.textLibName.text="包名冲突"
+	}
+	if(#libName==0){
+		status = false; 
+		winform.textLibName.text="包名不能为空"
+	} 
+	switchPlugIcon(winform.editLibName,status)
+}
+
+winform.btnNewLib.skin(
+	background = { 
+		hover = "/res/images/btn-hover.png";
+		focus = "/res/images/btn-focus.jpg";
+		active = "/res/images/btn-active.png";
+		disabled = "/res/images/btn-disabled.png"; 
+	}
+)
+winform.btnNewLib.oncommand = function(id,event){
+	
+}
+winform.btnNewLib.skin({
+	background={
+		active=0xFF0087E3;
+		default=0xFF00D0FF;
+		disabled=0xFFFF4D31;
+		focus=0xFFE3E3E3;
+		hover=0xFF0093FF
+	}
+})
 winform.show();
 win.loopMessage();
 return winform;

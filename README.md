@@ -160,7 +160,7 @@ ahk = "0.1.12"
 log4j = { git = "https://github.com/zzerding/aardio-log4j" }
 ```
 
-指定lzmp(或者 aardio) url 安装
+指定lzmp gz  tgz url 安装
 ```toml
 [dependencies]
 log4j = { url = "https://github.com/zzerding/aardio-log4j/releases/latest/download/log4j.tar.lzma" }

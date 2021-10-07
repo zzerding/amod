@@ -1,0 +1,39 @@
+﻿class listview{
+	ctor( winListview/*输入构造函数所需要的参数*/ ){
+		//listview
+		winListview.setExtended(0x4/*_LVS_EX_CHECKBOXES*/)
+		winListview.insertColumn("扩展库",150) 
+		winListview.insertColumn("版本",70) 
+		winListview.insertColumn("本地版本",70) 
+		winListview.insertColumn("作者",70)  
+		winListview.insertColumn("说明",-1)
+		
+
+	
+
+		//自适应列宽度 
+		winListview.adjust = function(cx,cy){
+    		winListview.fillParent(/*列序号*/);
+		} 
+ 		
+		
+		winListview.onnotify = function(id,code,ptr){
+			select(code) {
+				case 0xFFFFFFFD/*_NM_DBLCLK*/{
+					if(winListview.selIndex){
+						var nm = winListview.getNotifyMessage(code,ptr)
+						winListview.setChecked(nm.iItem,!winListview.getChecked(nm.iItem))
+					}
+				}
+			}
+		}
+	};
+	type=me;
+	/*对象的所有成员必须用分号分隔*/
+}
+
+namespace listview
+/**intellisense()
+winListview=.!listview
+end intellisense**/
+

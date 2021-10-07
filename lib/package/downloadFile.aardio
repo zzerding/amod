@@ -1,7 +1,36 @@
 ﻿//package.downloadFile tar 文件下载
 //TODO 不要重复下载
 //包存诸路径加上版本号
+import fsys;
+import inet.http;
+import sevenZip.lzma;
+import fsys.untar;
+import inet.downBox;
 namespace package.downloadFile
+
+var findLibFullPath = function(extraDir){
+	 var fileRootDir=extraDir;
+	 if(!..io.exist(extraDir)){
+	 	return ; 
+	 }
+
+ 	
+ 	var setupFile = ..fsys.joinpath(fileRootDir,"setup.dl.aardio")
+	if( ..io.exist(setupFile) ){
+		..fsys.delete(setupFile)	
+	}
+	
+	var libFullPath;
+	..fsys.enum( fileRootDir, "*.*",
+		function(dir,filename,fullpath,findData){ 
+			libFullPath=fullpath
+			return false; 
+		}
+	,false);
+
+	return libFullPath; 
+}
+
 download = function(url,title="下载",saveDir,extraDir,saveName,parentForm){
 	var tUrl = ..inet.url.split(url);
 	if(!tUrl){
@@ -23,6 +52,17 @@ download = function(url,title="下载",saveDir,extraDir,saveName,parentForm){
 	else {
 		extraDir = ..io.fullpath(extraDir);
 	} 
+	
+	//判断目录是否存在
+	//TODO 换成判断下载文件的hash是否和远程的一样
+	var  libFullPath;
+	libFullPath = findLibFullPath(extraDir)
+
+	if(libFullPath){
+		return  true,libFullPath; 
+	}
+
+	
 	var pathCabinet = ..fsys.joinpath(saveDir,saveName)
 	var tarTempName = pathCabinet + ".tar";
 	var downBox = ..inet.downBox(parentForm,title,false) 
@@ -93,8 +133,9 @@ download = function(url,title="下载",saveDir,extraDir,saveName,parentForm){
 		} 
 	}
 	
-	
 	downBox.download(url,pathCabinet,null,null,"" ) 
+
+
 	
 	if(!downBox.complete){ 
 		return;
@@ -103,27 +144,8 @@ download = function(url,title="下载",saveDir,extraDir,saveName,parentForm){
 	if( ! ..io.exist(pathCabinet,4) ){  
 		return false; 
 	} 
- 	var fileRootDir;
- 	..fsys.enum( extraDir, "*.*",
- 		function(dir,filename,fullpath,findData){ 
- 			if(filename){ 
- 				fileRootDir = dir;
- 	           	return false;
- 			} 
- 		}  
- 	,false);
 
- 	if(!fileRootDir)return;
- 	
- 	var setupFile = ..fsys.joinpath(fileRootDir,"setup.dl.aardio")
-	if( ..io.exist(setupFile) ){
-		..fsys.delete(setupFile)	
-	}
-	var libFullPath;
-	..fsys.enum( fileRootDir, "*.*",
-		function(dir,filename,fullpath,findData){ 
-			libFullPath=fullpath
-		}
-	,false);
+	libFullPath = findLibFullPath(extraDir)
+	if(!libFullPath) return ; 
 	return true,libFullPath; 		
 }
