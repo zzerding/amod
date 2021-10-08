@@ -127,19 +127,21 @@ var installPackage = function(installPath){
 
 winform.btnInstallProject.oncommand = function(id,event){
 	winform.btnInstallProject.disabled = true;
+	var oldConfigPath = config.toml.path
 	config.toml.path = package._project_config_path
 	var msg = installPackage(package._project_install_path)
 	winform.msgInfo(msg)	
-
+	config.toml.path = oldConfigPath
 	winform.btnInstallProject.disabled = false;
 }
 
 winform.btnInstallGlobal.oncommand = function(id,event){
 	winform.btnInstallGlobal.disabled = true
+	var oldConfigPath = config.toml.path
 	config.toml.path = package._global_config_path
 	var msg = installPackage(package._global_install_path)
 	winform.msgInfo(msg)
-
+	config.toml.path = oldConfigPath
 	winform.btnInstallGlobal.disabled = false	
 }
 

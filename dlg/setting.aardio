@@ -48,6 +48,7 @@ getAmodTomlPath()
 
 //show listview 
 showListview = function(){
+	winform.editTomlPath.text=config.toml.path
 	var libs = package.loadCacheLib()
 	winform.listview.clear();
     winform.listview.redraw();

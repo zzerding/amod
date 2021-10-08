@@ -196,7 +196,7 @@ var createLink = function(linkPath,targetPath){
 
 //install 
 var installForPath = function(libName,libPath,installPath){
-	createLink(libName,installPath,libPath)
+	createLink(installPath,libPath)
 }
 var installForUrl = function(libName,downloadUrl,installPath){
 	//只下载压缩文件
@@ -214,7 +214,7 @@ var installForGit = function(libPath,installPath){
 
 
 readConfig = function(tomlPath){
-	var tomlConfig = {}
+	var tomlConfig = { dependencies = {}}
 	tomlPath = tomlPath || config.toml.path
 	if(io.exist(tomlPath)){
 		tomlConfig=string.toml.parse(string.load(tomlPath))

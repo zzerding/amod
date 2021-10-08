@@ -11,16 +11,18 @@ libVersion={cls="plus";left=94;top=93;right=403;bottom=119;align="left";border={
 plus={cls="plus";text="包名：";left=23;top=49;right=86;bottom=79;align="right";color=16776960;z=3};
 plus2={cls="plus";text="选择类型：";left=9;top=136;right=87;bottom=166;align="right";color=16776960;z=10};
 plus4={cls="plus";text="版本：";left=24;top=93;right=87;bottom=123;align="right";color=16776960;z=6};
-textLibName={cls="plus";left=414;top=49;right=564;bottom=79;align="left";color=255;z=2};
-textPath={cls="plus";left=414;top=184;right=564;bottom=214;align="left";color=255;z=1};
-textVersion={cls="plus";left=414;top=93;right=564;bottom=123;align="left";color=255;z=5}
+textLibName={cls="plus";text="请输入包名如：string.text";left=414;top=49;right=564;bottom=79;align="left";color=255;z=2};
+textPath={cls="plus";text="   ";left=414;top=184;right=564;bottom=214;align="left";color=255;z=1};
+textVersion={cls="plus";text="请输入版本号如：v0.0.1";left=414;top=92;right=564;bottom=122;align="left";color=255;z=5}
 )
 /*}}*/
 
 import style
 import package;
+import config;
 import  fsys.dlg
-import win.dlg.message
+import inet.url
+import win.dlg.message;
 var libs = package.loadCacheLib()
 
 import win.debounce
@@ -59,7 +61,7 @@ winform.libVersion.onStateChange = function(state){
 	} 
 	switchPlugIcon(winform.libVersion,status)
 }
-var comBoxList = {'url','git','filePath'}
+var comBoxList = {'url','git','path'}
 
 winform.combobox.onDropDown= function(){ 
 	winform.combobox.autoComplete(comBoxList) //更新下拉列表
@@ -69,7 +71,7 @@ var removeCls = function(){
 	winform.remove("textHint","btnOpenFile","editPath")
 }
 
-
+//文件路径安装
 var addFileCls = function(){
 	removeCls()
 	winform.add(
@@ -91,8 +93,22 @@ var addFileCls = function(){
 		}
 		winform.editPath.text = dir
 	}
+	winform.editPath.onStateChange = function(){
+		var path = winform.editPath.text
+		winform.textPath.text=""
+		if(#path>0){
+			path =  ..string.replace(path,"\\","/")
+			winform.editPath.text=path
+		}
+		if(!io.exist(path)){
+			winform.textPath.text="文件路径错误"
+		}
+		switchPlugIcon(winform.editPath,io.exist(path))
+
+	}
 	
 }
+//git 安装
 var addGitCls = function(){
 	removeCls()
 	winform.add( 
@@ -100,9 +116,17 @@ var addGitCls = function(){
 		textHint={cls="plus";text="仓库地址：";left=9;top=185;right=87;bottom=215;align="right";color=16776960;z=12};
 	)
 	winform.editPath.onStateChange = function(state){
-		
+		var url  = winform.editPath.text
+		var status = true
+		winform.textPath.text=""
+		if(!inet.url.is(url,0x0/*_URLIS_URL*/)){
+			status = false
+			winform.textPath.text="不是url"
+		}
+		switchPlugIcon(winform.editPath,status)
 	}
 }
+//url 下载
 var addUrlCls = function(){
 	removeCls()
 	winform.add( 
@@ -110,7 +134,19 @@ var addUrlCls = function(){
 		textHint={cls="plus";text="包网址：";left=9;top=185;right=87;bottom=215;align="right";color=16776960;z=12};
 	)
 	winform.editPath.onStateChange = function(state){
-		
+		var url  = winform.editPath.text
+		winform.textPath.text=""
+		var status = true
+		if(!inet.url.is(url,0x0/*_URLIS_URL*/)){
+			status = false
+			winform.textPath.text="不是url"
+			return ; 
+		}
+		if(!string.match(url,"<.gz>|<.tar>|<.tgz>|<lzma>$")){
+			status = false
+			winform.textPath.text="只支持.gz .tgz .tar .lzma"
+		}
+		switchPlugIcon(winform.editPath,status)
 	}
 }
 
@@ -120,28 +156,64 @@ winform.combobox.onListChange= function(){
 	select(selectText) {
 		case 'url' {
 			addUrlCls()
-			
 		}
 		case 'git' {
 			addGitCls()
 		}
-		case 'filePath'{
+		case 'path'{
 			..publish("log","选择 aardio 文件，如果库为目录那么选择库的_.aardio 文件")
 			addFileCls()
 		}
 	}
 }
 
+var installPackage = function(installPath){
+	
+	if(#winform.textLibName.text>0 || #winform.textVersion.text>0 || #winform.textPath.text>0){
+		return   winform.msgErr("输入有误");
+	}
+	var libName = winform.editLibName.text
+	var libClass = winform.combobox.text
+	if(#libClass==0) return winform.msgErr("未选择包类型",1000);
+	var libInfo = {
+			version = winform.libVersion.text;
+			[libClass] = winform.editPath.text;
+	}
+	import string.toml
+	import debug
+	var test=string.toml.stringify(libInfo)
+	debug.debug()
+	
+	var err = package.installLib(libName,libInfo,installPath)
+	if(#err>0){
+		return winform.msgErr(err); 
+	}
+	package.writConifg(libName,libInfo)
+	winform.msgOk(libName+"安装成功")
+	ide.refreshStdLib()
+	ide.refreshUserLib()
+}
 winform.btnGlobalInsall.skin(style.primaryButton)
 winform.btnGlobalInsall.oncommand = function(id,event){
-		import console
-		console.log("1")
+	winform.btnGlobalInsall.disabled = true;
+	var oldConfigPath = config.toml.path
+	config.toml.path = package._global_config_path
+	installPackage(package._global_install_path)	
+	config.toml.path = oldConfigPath
+	winform.btnGlobalInsall.disabled = false;
+}
+
+winform.btnProjectInstall.skin(style.primaryButton)
+winform.btnProjectInstall.oncommand = function(id,event){
+	winform.btnProjectInstall.disabled = true;
+	var oldConfigPath = config.toml.path
+	config.toml.path = package._project_config_path
+	installPackage(package._project_install_path)	
+	config.toml.path = oldConfigPath
+	winform.btnProjectInstall.disabled = false;
 }
 
 
-
-
-winform.btnProjectInstall.skin(style.primaryButton)
 winform.show();
 win.loopMessage();
 return winform;

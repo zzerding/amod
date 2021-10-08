@@ -365,7 +365,8 @@ log4j = { url = "https://github.com/zzerding/aardio-log4j/releases/latest/downlo
 
 
 指定本地路径安装
-log4j = {path = "~/aardio/lib/log4j"}
+log4j = {path = "~/aardio/lib/log4j"} #如果是反斜杠那么要进行转义如："~\\aardio\\lib\\log4j"
+
 
 ```
 
