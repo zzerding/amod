@@ -1,16 +1,16 @@
 //amod 第三方库管理工具
-//todo 
-//1.use git or ide.instll local global clone and remote
-//2.list local repe and global repe
-//3.write repo version
-//4.update list remove
+//todo：
+//缓存的库文件的路径应该加上版本以区分不同版本
+//git clone 和 下载 url 应该新建一个lock文件写入版本，下次下载应该下载或 clone 指定版本hash
+//为远程库建立库提交规范
+//为每个库函数建立单元测试文件 
 import fonts.fontAwesome;
 import win.ui;
 /*DSG{{*/
 mainForm = win.form(text="amazon_ocr";right=1040;bottom=682;bgcolor=15793151;border="none";max=false)
 mainForm.add(
 bkplus2={cls="bkplus";left=0;top=646;right=1042;bottom=685;bgcolor=633981;dl=1;dr=1;dt=1;forecolor=702855;linearGradient=4;z=1};
-caption={cls="bkplus";text="AMOD 包管理工具";left=34;top=12;right=159;bottom=30;color=15780518;dl=1;dt=1;font=LOGFONT(h=-14;weight=700);z=5};
+caption={cls="bkplus";text="AMOD 包管理";left=22;top=12;right=147;bottom=30;color=15780518;dl=1;dt=1;font=LOGFONT(h=-14;weight=700);z=5};
 custom={cls="custom";left=0;top=40;right=1041;bottom=647;bgcolor=16777215;db=1;dl=1;dr=1;dt=1;repeat="scale";z=2};
 log={cls="plus";text="启动成功 ";left=216;top=656;right=756;bottom=678;color=128;z=12};
 navNewLib={cls="plus";text="新建";left=359;top=5;right=453;bottom=40;align="left";color=16777215;dl=1;dt=1;font=LOGFONT(h=-16);iconStyle={align="left";font=LOGFONT(h=-19;name='FontAwesome');padding={left=12;top=4}};iconText='\uF002';notify=1;paddingLeft=1;paddingRight=1;paddingTop=3;textPadding={left=39;bottom=1};x=0.5;y=0.2;z=13};

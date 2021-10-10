@@ -246,7 +246,7 @@ readConfig = function(tomlPath){
 }
 
 loadInstallLibs = function(tomlPath){
-		tomlConfig = tomlPath || readConfig()
+		var tomlConfig = readConfig()
 		return tomlConfig.dependencies; 
 }
 
@@ -289,6 +289,8 @@ installLib= function(libName,libInfo,installPath){
 
 install= function(installPath,tomlPath){
 	var libs=loadCacheLib()
+	installPath = installPath || config.toml.installedDir
+	tomlPath = tomlPath || config.toml.path
 	var installLibs = loadInstallLibs(tomlPath)
 	var logs = ""
 	for libName,v in ..table.eachName(installLibs){
@@ -374,8 +376,8 @@ loadInstallLibs() = return installed libs
 update() = pull remote libs list to local cache file
 remove(libName) = remove lib
 filterLib(keywor,libs) = filter libs math keyword
-install(libName,libInfo,installDir) = install lib
-installAll(installPath) = install all libs for toml config
+installLib(libName,libInfo,installDir) = install lib
+install(installPath,tomlPath) = install all libs for toml config,两个参数都是可选的
 createLink (linkPath,targetPath)= 为 targetPath 创建链接，如果 targetPath 为文件则为硬链接，如果为目录则为符号链接
 
 end intellisense**/

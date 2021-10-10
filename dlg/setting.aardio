@@ -5,7 +5,7 @@ import win.ui;
 var winform = win.form(text="包管理";right=1040;bottom=607;border="thin")
 winform.add(
 btnDeselectAll={cls="button";text="取消全选";left=207;top=551;right=307;bottom=581;z=9};
-btnInstall={cls="button";text="更新";left=924;top=552;right=1024;bottom=582;z=10};
+btnInstall={cls="button";text="重新安装";left=924;top=552;right=1024;bottom=582;z=10};
 btnRemove={cls="button";text="删除";left=810;top=552;right=910;bottom=582;z=11};
 btnSelectAll={cls="button";text="全选";left=90;top=551;right=190;bottom=581;z=8};
 editTomlPath={cls="edit";left=181;top=20;right=535;bottom=49;edge=1;multiline=1;z=4};
@@ -114,15 +114,7 @@ winform.btnInstall.oncommand = function(id,event){
 	winform.btnInstall.disabled = true;
 	
 	var installedLibs = ide.getExtLibs(); 
-	for(i=winform.listview.count;1;-1){
-		if( winform.listview.getChecked(i) ){
-			var libName = winform.listview.getItemText(i,1) ;
-			var libVersion = winform.listview.getItemText(i,2) ;
-			var installVersion = installedLibs[libName][["version"]];
-			//installSystem(libName,libVersion,installVersion)
-		}
-	} 
-	ide.refreshStdLib();
+	package.install()
 	winform.btnInstall.disabled = false;
 }
 
