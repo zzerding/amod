@@ -180,9 +180,7 @@ var installPackage = function(installPath){
 			[libClass] = winform.editPath.text;
 	}
 	import string.toml
-	import debug
 	var test=string.toml.stringify(libInfo)
-	debug.debug()
 	
 	var err = package.installLib(libName,libInfo,installPath)
 	if(#err>0){

@@ -63,10 +63,18 @@ showListview = function(){
 		}
 		for libName,lib in table.eachName(installedLibs){ 
 			var libInfo = {version:"";author:"";description:""}
+			var item = {
+				libName;
+				libInfo.version;
+				installedLibs[libName][["version"]] : "未安装";
+				libInfo.author;
+				libInfo.description
+			}
 			if(libs && libs[libName]){
 				libInfo = libs[libName]	
 			}
-			var row = winform.listview.addItem( { libName;libInfo.version;installedLibs[libName] : "未安装";libInfo.author;libInfo.description } )
+
+			var row = winform.listview.addItem(item)
 			//winform.listview.setChecked(row,true)
 		} 
 	}

@@ -129,6 +129,8 @@ filterLib = function(keyword,libs){
 
 		return result
 }
+
+
 // 和 io.libPath 差不多的功能只是把包名转换为路径 
 //返回包的父文件夹 和 包位置;如果包位置不存在返回null
 convLibPath = function(libName,basePath){
@@ -157,7 +159,7 @@ convLibPath = function(libName,basePath){
 }
 
 //file link 创建文件硬连接目录软连接
-var createLink = function(linkPath,targetPath){
+var createLink = function(libName,linkPath,targetPath){
 	//直接复制到目录目录但是有个问题，就是电脑存在多个
 	//符号连接要提权才能进行复制 硬连接不能连接目录
 	//cmd mklink 测试不用提权 待测试
@@ -173,7 +175,14 @@ var createLink = function(linkPath,targetPath){
 	if(!io.exist(linkPath)) io.createDir(linkPath)
 	
 	//join path fileName
-	var fileName = fsys.getFileName(targetPath)
+	var fileName;
+	if(fsys.isDir(targetPath)){
+		var sp = ..string.split(libName,".") //有时候仓库名称不是库空间名
+		fileName = sp[#sp]
+	}else{
+		fileName = fsys.getFileName(targetPath)
+	}
+	
 	linkPath = fsys.joinpath(linkPath,fileName)
 	
 	if(io.exist(linkPath)) error("创建链接失败！参数一目录已经有同名文件存在",2)
@@ -194,22 +203,36 @@ var createLink = function(linkPath,targetPath){
 	return  err; 
 }
 
-//install 
+//install  file path
 var installForPath = function(libName,libPath,installPath){
-	createLink(installPath,libPath)
+	createLink(libName,installPath,libPath)
 }
+//install for url
 var installForUrl = function(libName,downloadUrl,installPath){
 	//只下载压缩文件
 	var mutex = ..process.mutex("{4F4ED831-0B97-4EC2-BAC7-A616051108FC}.lock.import." + libName,false,false);
 	mutex.wait(); {
 			var ok,libPath =package.downloadFile.download(downloadUrl,"amod 下载 "+libName+" 扩展库",_cacheDir, ,libName + ".tar.lzma");
 			if(!ok) error("下载解压出错",2)
-			createLink(installPath,libPath)
+			createLink(libName,installPath,libPath)
 
 		} mutex.release();
 }
-var installForGit = function(libPath,installPath){
-	
+//install for git
+import gitDownBox
+import package.git
+var installForGit = function(libName,url,installPath){
+	var gitBox = gitDownBox()
+	var libPath = package.git.urlConvDirPath(url)
+	var mutex = ..process.mutex("{B0AD90E3-E207-4095-AF06-547FB8B2D313}.lock.import." + url,false,false);
+	mutex.wait(); {
+		gitBox.commnad("clone",workDir,url)
+	} mutex.release();
+	if(#gitBox.err>0){
+		error(gitBox.err,2)
+	}
+	createLink(libName,installPath,libPath)
+
 }
 
 
@@ -310,14 +333,14 @@ removeLibConfig=function(libName,tomlPath){
 	return isSave,err; 
 }
 remove  = function(libName){
-	var isDelete = deleteLibFile(libName)
-	var msg;
-	if(isDelete){
-		var isSave,err= removeLibConfig(libName)
+	var isSave,err= removeLibConfig(libName)
 		if(!isSave){
 			msg = "配置文件保存失败"
 			log.print(err)
-		} 
+	} 
+	var isDelete = deleteLibFile(libName)
+	var msg;
+	if(isDelete){
 		msg = libName+":  删除成功"
 	}else{
 		msg = libName+": 删除失败包已经不存在或者被占用，请手动检查"
@@ -327,6 +350,8 @@ remove  = function(libName){
 }
 
 /**intellisense(package)
+_amodDir = appdata dir
+_cacheDir = download dir
 _cacheSystemLibPath = system lib cache file path
 _cacheGithubLibPath = github lib chahe file path
 _global_config_path =  fsys.joinpath(..io._exedir,"extensions","amod.toml")

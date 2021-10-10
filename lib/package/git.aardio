@@ -1,0 +1,52 @@
+﻿
+namespace package.git
+
+import process.git
+import package
+import fsys
+import inet.url
+import fsys.namedPipe
+
+
+logout = null
+workDir = null
+urlConvDirPath =function(url){
+	var urlInfo = inet.url.split(url)
+    return  fsys.joinpath(..package._cacheDir,urlInfo.host,urlInfo.path)
+}
+
+
+clone = function(url,...){
+	workDir = workDir|| package.git.urlConvDirPath(url)
+	var git = process.git(workDir)
+	var prcs = git.popen("clone","--depth","1","--progress",url,workDir)
+	if(logout){
+		prcs.logger = logout
+		prcs.logResponse(,100)
+	}
+	var err = prcs.readErr(-1)
+	prcs.waitOne()
+	return err; 
+}
+
+
+pull = function(url,...){
+	workDir = workDir||..package.git.urlConvDirPath(url)
+	var git = ..process.git(workDir)
+	var prcs = git.popen("pull","--depth","1","--progress",url)
+	if(logout){
+		prcs.logger = logout
+		prcs.logResponse(,100)
+	}
+	var err = prcs.readErr(-1)
+	prcs.waitOne()
+	return err; 
+}
+
+/**intellisense(package.git)
+urlConvDirPath(url) = conv url to full path  _cacheDir/host/url.paths
+workDir = 工作目录
+logout = prcs.logger 输出对象
+clone(url) = git clone
+pull(url) = git pull
+end intellisense**/

@@ -1,0 +1,83 @@
+﻿// gitDownBox 进度条窗口 操作 clone push pull 时显示进度条窗口
+class gitDownBox{
+	ctor( .../*输入构造函数所需要的参数*/ ){
+		import inet.downBox
+		this = inet.downBox(...)
+		this.err = ""
+	};
+	onReceiveBegin = function(progresRange){
+		//初始化进度条
+		this.progress.setProgressRange(0,progresRange);
+		this.progress.progressPos = 0;
+		this.progress.hide = false; 
+	}
+	onReceive = function(progressPos){	
+		this.progress.progressPos = progressPos;  
+	};
+	commnad = function(gitCmd,workDir,...){
+		var args = {...}
+		this.complete = false;
+		this.onInitDialog = function(hwnd,message,wParam,lParam) { 
+			this.show();
+			..thread.invoke(gitCommand, this, gitCmd,workDir,..table.unpackArgs(args))
+		}
+		return this.doModal();
+
+	}
+	log = function(...){
+		var str = ..string.concat(...)
+		//matcc git fatal  keyword 
+		if(..string.match(str,"^<fatal>")){
+			this.err = ..string.match(str,'^<fatal>.*\n')
+			this.onError(..string.left(this.err,80))
+		}
+		
+		// 设置进度
+		var reg = "<Receiving objects>\:\s*(\d+)\%"
+		for m in ..string.gmatch( str,reg) { 
+			if(m == 100){
+				this.progress.stopProgress();
+				this.endModal()
+				return ; 
+			}
+			this.onReceive(m*10)
+		}
+	}
+	
+
+}
+
+namespace gitDownBox{
+	gitCommand = function(this ,gitCmd,workDir,...){
+		//要线程里进行设置
+		this.text= ..string.concat("git   ",gitCmd,"   ",...)
+		this.onStatusChange( ..string.concat("git   ",gitCmd,"   ",...));
+		this.onReceiveBegin(1000)
+		this.progress.startProgress(0);
+	    //导入操作库
+		import package.git
+		package.git.logout = this
+		package.git.workDir=workDir
+		package.git[gitCmd](...)
+		if(#this.err>0){
+			this.progress.stopProgress();
+			if( !this.continueModal ) return false;
+		}else{
+			this.complete("操作完成")
+		}
+	}
+	
+}
+/**intellisense(gitDownBox)
+gitDownBox = git 操作进度条对话框
+gitDownBox() = 创建一个进度条对话框\n!git_downBox. 
+gitDownBox(.(父窗口,"标题") = 所有参数可选\n参数
+!git_downBox.text = 对话框标题
+!git_downBox.labProgress = 显示进度信息\n!static.
+!git_downBox.labInfo = 显示信息\n!static.
+!git_downBox.progress = 进度条\n!plus.
+!git_downBox.err= 错误信息
+!git_downBox.topmost()=窗体始终最前
+!git_downBox.topmost(false)=取消窗体始终最前
+!git_downBox.commnad = function(gitCmd,workDir,...)\n @1只支持 pull clone 两个命令 \n@2 git工作目录  \n@3 命令参数
+end intellisense**/
