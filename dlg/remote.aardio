@@ -48,10 +48,18 @@ function (){
 function showLibsToTable(libs){
 		winform.listview.clear()
 		for libName,libInfo in table.eachName(libs){ 
+		var localVersion = "未安装"
+		var installLibInfo = installedLibs[libName]
+		
+		if(type(installLibInfo)==type.table){
+			localVersion = installLibInfo.version
+		}else if(type(installLibInfo)==type.string){
+			localVersion = installLibInfo
+		}
 		var item = {
 			libName;
 			libInfo.version;
-			installedLibs[libName][["version"]] : "未安装";
+			localVersion;
 			libInfo.author;
 			libInfo.description
 		}

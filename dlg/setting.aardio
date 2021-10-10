@@ -42,8 +42,11 @@ function getAmodTomlPath(){
 	winform.editTomlPath.text=config.toml.path
 }
 
-
+//init
+tbs.selIndex=1
+config.toml.installedDir = package._project_install_path
 getAmodTomlPath()
+
 
 
 //show listview 
@@ -66,11 +69,16 @@ showListview = function(){
 			if(libs && libs[libName]){
 				libInfo = libs[libName]	
 			}
-
+			var version=""
+			if(type(lib)==type.table){
+				version = lib[["version"]] 
+			}else{
+				version = lib
+			}
 			var item = {
 				libName;
 				libInfo.version;
-				installedLibs[libName][["version"]] : "未安装";
+				version;
 				libInfo.author;
 				libInfo.description
 			}
@@ -154,8 +162,7 @@ tbs.skin({
 	}
 })
 //tabs on event
-tbs.selIndex=1
-config.toml.installedDir = package._project_install_path
+
 tbs.oncommand = function(strip,id,event){
 	getAmodTomlPath()
 	select(tbs.selIndex) {
@@ -178,5 +185,6 @@ showListview()
 
 
 winform.show();
+
 win.loopMessage();
 return winform;

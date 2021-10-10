@@ -47,10 +47,10 @@ getLocalPath = function(){
 switchConfigPath=function (index){
 	select(index) {
 		case 1 {
-			config.toml.path=getLocalPath()
+			config.toml.path=_project_config_path
 		}
 		case 2 {
-			config.toml.path=getGlobalPath()
+			config.toml.path=_global_config_path
 		}
 	}
 	config.saveAll()
