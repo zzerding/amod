@@ -1,0 +1,48 @@
+import console; 
+import package.git
+import fsys;
+import io;
+var url = "https://github.com/zzerding/aardio-log4j"
+var urlConvPath = "C:\Users\zzerd\AppData\Local\aardio\amod\cache\github.com\zzerding\aardio-log4j"
+var workDir = package.git.urlConvDirPath(url)
+
+function testGitConv( ){
+	assert(urlConvPath==workDir,"转换失败")	
+}
+function clear(){
+	if(io.exist(workDir)){
+		fsys.delete(workDir)
+	}
+}
+
+
+function testClone(){
+	clear()
+	package.git.clone(url)
+
+	var readme = fsys.joinpath(workDir,"README.md")
+	if(!io.exist(readme)){
+		return errput("testClone falat")
+	}
+	console.log("testClone 成功")
+	clear()
+}
+
+function testGitDownBox(){
+	clear()
+	import gitDownBox
+	var git = gitDownBox()
+	git.commnad("clone",workDir,url)
+	console.log(git.err)
+	if(#git.err>0){
+		return errput("testGitDownBox falat",git.err)
+	}
+	console.log("testGitDownBox 成功")
+	clear()
+}
+
+testGitConv()
+testClone()
+testGitDownBox()
+
+console.pause(true);
