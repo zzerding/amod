@@ -63,15 +63,16 @@ showListview = function(){
 		}
 		for libName,lib in table.eachName(installedLibs){ 
 			var libInfo = {version:"";author:"";description:""}
+			if(libs && libs[libName]){
+				libInfo = libs[libName]	
+			}
+
 			var item = {
 				libName;
 				libInfo.version;
 				installedLibs[libName][["version"]] : "未安装";
 				libInfo.author;
 				libInfo.description
-			}
-			if(libs && libs[libName]){
-				libInfo = libs[libName]	
 			}
 
 			var row = winform.listview.addItem(item)
