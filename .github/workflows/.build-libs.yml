@@ -25,12 +25,14 @@ jobs:
 
       - name: Push artifacts to release branch
         run: |
+          mv libs.json.gz ../
           git config --local user.email "action+hack@github.com"
           git config --local user.name "github-action[bot]"
           git fetch
           git checkout release
           git checkout --orphan release-orphan
           git rm -rf .
+          mv ../libs.json.gz ./
           git add libs.json.gz
           git commit -am "Updated at $(date)"
           git branch -D release
