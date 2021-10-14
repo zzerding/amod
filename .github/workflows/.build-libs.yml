@@ -1,0 +1,45 @@
+name: libs build
+on:
+  push:
+    branches: [libs]
+  schedule: 
+    - cron:  '0 2 */3 * *'
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout libs
+        uses: actions/checkout@v2
+      - run: git checkout libs
+
+      - name: apt update
+        run: sudo apt-get update &&
+          sudo apt-get install  python3-pip
+
+      - name: pip3 install toml
+        run: pip3 install toml
+
+      - name: run build script
+        run: python3 script/build.py
+          
+
+      - name: Push artifacts to release branch
+        run: |
+          git config --local user.email "action+hack@github.com"
+          git config --local user.name "github-action[bot]"
+          git fetch
+          git checkout release
+          git checkout --orphan release-orphan
+          git rm -rf .
+          git add libs.json.gz
+          git commit -am "Updated at $(date)"
+          git branch -D release
+          git branch -m release
+
+      - name: GitHub Push
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: release
+          force: true
+
