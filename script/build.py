@@ -26,6 +26,6 @@ def loadFiles():
 def main():
     loadFiles()
     with gzip.open('./libs.json.gz', 'wb') as f:
-        f.write(json.dumps(libs).encode("unicode_escape"))
+        f.write(json.dumps(libs,ensure_ascii=False).encode("unicode_escape"))
     #print(libs)
 main()
