@@ -79,7 +79,7 @@ showListview = function(){
 				libName;
 				libInfo.version;
 				version;
-				libInfo.author;
+				libInfo.author || libInfo.authors;
 				libInfo.description
 			}
 

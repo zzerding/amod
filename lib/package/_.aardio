@@ -83,6 +83,29 @@ update = function(){
 	
 
 	//get remote libs
+	var cdnUrl="https://cdn.jsdelivr.net/gh/zzerding/amod@release/libs.json.gz"
+	//var rawUrl ="https://github.com/zzerding/amod/raw/release/libs.json.gz"
+	var fastGitUrl="https://raw.fastgit.org/zzerding/amod/release/libs.json.gz"
+	import inet.whttp
+	var http = inet.whttp()
+	http.setTimeouts(3000,3000,3000)
+	//先以 github 加速服务访问，考虑到国内环境原始url估计都访问不了
+	try{
+		var ret = http.get(fastGitUrl)
+		if(http.statusCode!=200){
+			ret = http.get(cdnUrl) //jsdelivr 这个cdn缓存不知道多久，不能刷新。不行后期搞个免费的cdn试试
+		}
+		if(http.statusCode!=200){
+			return error("连接超时"); 
+		}
+		import zlib
+		var libsStr = zlib.uncompress(ret)
+		string.save(_cacheGithubLibPath,libsStr)
+	}
+	catch(e){
+		err = e
+	}
+	
 	return  err; 
 }
 

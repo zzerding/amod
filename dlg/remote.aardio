@@ -60,7 +60,7 @@ function showLibsToTable(libs){
 			libName;
 			libInfo.version;
 			localVersion;
-			libInfo.author;
+			libInfo.author || libInfo.authors;
 			libInfo.description
 		}
 		var row = winform.listview.addItem( item)
