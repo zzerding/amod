@@ -1,0 +1,22 @@
+import process.git
+import ide
+import console
+import fsys
+var url ="https://github.com/zzerding/amod"
+//url="https://hub.fastgit.org/zzerding/amod" //如果你不能正常 clone 打开这个注释
+var dir = io.createDir("~/tools/test/amod")
+var git = process.git(dir)
+var msg ,err 
+var README = fsys.joinpath(dir,"README.md")
+if(io.exist(README)){
+	console.log("正在 更新 ")
+	 msg ,err = git.pull("--depth","1")
+}else{
+	console.log("正在 clone ")
+    msg ,err = git.clone("--depth","1",url,dir)
+}
+
+console.log(msg)
+console.log(err)
+console.pause()
+ide.refreshStdLib()

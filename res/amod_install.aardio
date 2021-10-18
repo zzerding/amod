@@ -1,0 +1,39 @@
+import inet.downBox
+import ide
+var url = "https://cdn.jsdelivr.net/gh/zzerding/amod@release/amod.tgz"
+//url ="https://raw.githubusercontent.com/zzerding/amod/release/amod.tgz"
+var file = io.fullpath("~/download/amod.tgz")
+var extraDir = io.fullpath("~/tools")
+var downBox = inet.downBox(,"install amod",1000 )
+
+
+downBox.endProc = function(ret,fileSize,unmodified){
+	downBox.text = "正在解压:" + file;
+	import  fsys.untar
+	var tar = fsys.untar(file,extraDir)
+	tar.utf8 = true
+	downBox.progress.hide = false;
+	downBox.progress.setProgressRange(1,100);
+	downBox.progress.progressPos = 0;
+	downBox.labProgress.text = "正在解压缩,文件块总数: " + tar.blocksCount;
+	for(fileName,writeSize,remainSize,progress in tar.eachBlock(100) ){
+		downBox.progress.progressPos = progress
+    	downBox.labInfo.text = fileName;
+    	..win.peekPumpInputMessage();
+					
+		if(extractPath){ 
+			return downBox.continueModal;
+		}  
+	}
+	if(tar.lastError){
+		downBox.labProgress.text = tar.lastError ;	
+	}
+	if(tar.complete){
+		downBox.labProgress.text = "安装完成" ;
+		ide.refreshStdLib()
+	}
+	if(!unmodified)
+		owner.endModal();
+}
+
+downBox.download(url,"~/download/amod.tgz")
