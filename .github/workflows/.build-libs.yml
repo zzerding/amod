@@ -1,14 +1,14 @@
 name: libs build
 on:
   push:
-    branches: [libs]
+    branches: [libs, master]
   schedule: 
     - cron:  '0 2 */3 * *'
 jobs:
   build:
     runs-on: ubuntu-20.04
     steps:
-      - name: Checkout libs
+      - name: Checkout libs 
         uses: actions/checkout@v2
       - run: git checkout libs
 
@@ -29,10 +29,14 @@ jobs:
           git config --local user.email "action+hack@github.com"
           git config --local user.name "github-action[bot]"
           git fetch
+          git checkout master 
+          tar -czvf ../amod.tgz --exclude=".git" ../amod
           git checkout release
           git checkout --orphan release-orphan
           git rm -rf .
           mv ../libs.json.gz ./
+          mv ../amod.tgz ./
+          git add amod.tgz
           git add libs.json.gz
           git commit -am "Updated at $(date)"
           git branch -D release
