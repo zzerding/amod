@@ -4,7 +4,11 @@ import console
 import fsys
 var url ="https://github.com/zzerding/amod"
 //url="https://hub.fastgit.org/zzerding/amod" //如果你不能正常 clone 打开这个注释
-var dir = io.createDir("~/tools/test/amod")
+var args = {...}//@1 url 
+if(args[1]){
+	url = args[1]
+}
+var dir = io.createDir("~/tools/amod")
 var git = process.git(dir)
 var msg ,err 
 var README = fsys.joinpath(dir,"README.md")

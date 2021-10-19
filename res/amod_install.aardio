@@ -1,11 +1,16 @@
 import inet.downBox
 import ide
+
 var url = "https://cdn.jsdelivr.net/gh/zzerding/amod@release/amod.tgz"
 //url ="https://raw.githubusercontent.com/zzerding/amod/release/amod.tgz"
 var file = io.fullpath("~/download/amod.tgz")
 var extraDir = io.fullpath("~/tools")
 var downBox = inet.downBox(,"install amod",1000 )
 
+var args = {...}//@1 url 
+if(args[1]){
+	url = args[1]
+}
 
 downBox.endProc = function(ret,fileSize,unmodified){
 	downBox.text = "正在解压:" + file;

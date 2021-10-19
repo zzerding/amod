@@ -88,7 +88,7 @@ showListview = function(){
 		} 
 	}
 	else {
-		..publish("log","获取失败")
+		..publish("log","当前没有安装任何库")
 	} 	
 }
 
