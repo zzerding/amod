@@ -3,11 +3,10 @@
 name = "log4j"
 version = "v1.01"
 url = "https://github.com/zzerding/aardio-log4j/releases/latest/download/log4j.tar.lzma"
-hash = "751e65d5c2a1e1fcbee85e1f6c92a03e"
-# 或者把 url 换成 git网址也行
-# git =  "https://gitee.com/zzerd/aardio-log4j"
+sha = "751e65d5c2a1e1fcbee85e1f6c92a03e"
 authors = "zzerd"
 description = "基于log4j理念设计的日志管理库,console有彩色输出日志可分类"
+samples = "test/log4jTest.aardio"
 
 #下面为可选的：请参考https://github.com/zzerding/amod/blob/master/docs/%E5%BA%93%E6%8F%90%E4%BA%A4%E8%A7%84%E8%8C%83.md
 homepage = "https://zzerd.com"

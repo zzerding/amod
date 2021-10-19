@@ -14,13 +14,13 @@
    name = "log4j"
    version = "v1.01"
    url = "https://github.com/zzerding/aardio-log4j/releases/latest/download/log4j.tar.lzma"
-   hash = "068f7e6c70b90b8f8d4a88087fbadb86d000d3ce"
-   # 或者把 url 换成 git网址也行
-   # git =  "https://gitee.com/zzerd/aardio-log4j"
+   sha = "068f7e6c70b90b8f8d4a88087fbadb86d000d3ce"
    authors = "zzerd"
    description = "基于log4j理念设计的日志管理库,console有彩色输出日志可分类"
    
+   
    #下面为可选的：请参考https://github.com/zzerding/amod/blob/master/docs/%E5%BA%93%E6%8F%90%E4%BA%A4%E8%A7%84%E8%8C%83.md
+   samples ="test/log4jTest.aardio" #示例文件地址
    homepage = "https://zzerd.com"
    repository ="https://github.com/zzerding/aardio-log4j"
    
@@ -37,3 +37,4 @@
 - [🚀 CDN 加速](https://cdn.jsdelivr.net/gh/zzerding/amod@release/libs.json.gz)
 
   cdn 可能有缓存的问题，如果 github raw 能访问不建议使用 cdn
+
