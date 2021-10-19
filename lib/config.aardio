@@ -1,14 +1,22 @@
 ﻿import fsys.config
 import ide
 config = ..fsys.config(..io.appData("/aardio/amod"))
-namespace config
-config.toml={}
+
+
+if(!config.toml){
+	config.toml={}
+}
+
 if(!config.toml.path){
 	var libDir = ..ide.getProjectDir()
 	config.toml.path = ..fsys.joinpath(libDir,"amod.toml")
 }
 if(!config.toml.installedDir){
-	config.toml.path = ..fsys.joinpath(..ide.getProjectDir(),"lib")
+	config.toml.installedDir = ..fsys.joinpath(..ide.getProjectDir(),"lib")
+}
+
+if(!config.toml.version){
+	config.toml.version = "v0.0.1"
 }
 
 /**intellisense(config)

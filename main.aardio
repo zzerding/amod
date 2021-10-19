@@ -18,17 +18,18 @@ navNewLib={cls="plus";text="新建";left=359;top=5;right=453;bottom=40;align="le
 navRemote={cls="plus";text="远程";left=260;top=5;right=354;bottom=40;align="left";color=16777215;dl=1;dt=1;font=LOGFONT(h=-16);iconStyle={align="left";font=LOGFONT(h=-19;name='FontAwesome');padding={left=12;top=4}};iconText='\uF002';notify=1;paddingLeft=1;paddingRight=1;paddingTop=3;textPadding={left=39;bottom=1};x=0.5;y=0.2;z=6};
 navSetting={cls="plus";text="管理";left=166;top=5;right=260;bottom=40;align="left";color=16777215;dl=1;dt=1;font=LOGFONT(h=-16);iconStyle={align="left";font=LOGFONT(h=-19;name='FontAwesome');padding={left=12;top=4}};iconText='\uF0AD';notify=1;paddingLeft=1;paddingRight=1;paddingTop=3;textPadding={left=39;bottom=1};x=0.5;y=0.2;z=4};
 plus2={cls="plus";left=11;top=7;right=39;bottom=30;background="\res\logo_ico.ico";repeat="scale";z=7};
-plus4={cls="plus";text="QQ: 37791537";left=105;top=657;right=199;bottom=679;align="left";z=10};
-plus5={cls="plus";text="版本：V 0.0.1";left=11;top=656;right=94;bottom=678;align="left";z=11};
+qq={cls="plus";text="QQ: 37791537";left=119;top=657;right=213;bottom=679;align="left";z=10};
 star={cls="plus";text="Star | 100k";left=770;top=651;right=886;bottom=680;align="left";border={color=-10066330;radius=8;width=2};dl=1;dt=1;iconStyle={align="left";font=LOGFONT(h=-16;name='FontAwesome');padding={left=11;top=4}};iconText='\uF006';notify=1;paddingLeft=1;paddingRight=1;paddingTop=3;textPadding={left=35;bottom=1};x=0.5;y=0.2;z=8};
-titleBar={cls="bkplus";left=0;top=0;right=1042;bottom=40;bgcolor=14977280;dl=1;dr=1;dt=1;z=3}
+titleBar={cls="bkplus";left=0;top=0;right=1042;bottom=40;bgcolor=14977280;dl=1;dr=1;dt=1;z=3};
+version={cls="plus";text="v 0.0.1";left=52;top=656;right=121;bottom=678;align="left";z=14};
+versionStr={cls="plus";text="版本：";left=7;top=656;right=55;bottom=678;align="left";z=11}
 )
 /*}}*/
 
 import win.dlg.message
 import win.ui.tabs;
 import win.ui.simpleWindow;
-
+import config
 import win.ui.atom 
 var atom,hwndConflict = mainForm.atom("E4F46764-614B-4C2B-A317-CC5224067F3D");
 if(!atom){
@@ -87,6 +88,65 @@ mainForm.fork.oncommand = function(id,event){
 
 tbs.selIndex = 1
 win.ui.simpleWindow( mainForm )
+
+//update github start count
+ thread.invoke(
+	function(mainForm){
+		import win;
+		import web.rest.github
+		var clent = web.rest.github()
+		try{		
+			var githubRespose = clent.api().repos["zzerding/amod"].get()
+			if(githubRespose){
+				mainForm.star.text = "Star |  "+ githubRespose.stargazers_count
+				mainForm.fork.text = "Fork |  " + githubRespose.forks_count
+			}
+		}
+		catch(e){
+			mainForm.publish("log","github 连接失败")
+		}
+
+	} 
+,mainForm)
+
+//update package
+mainForm.version.text = config.toml.version
+function getRemoteTag(){
+	return ..win.invoke(
+		function(mainForm){
+			import win;
+			import web.rest.github
+			var clent = web.rest.github()
+			var tag,err
+			try{		
+				var githubRespose = clent.api().repos["zzerding/amod"].tags.get()
+				tag = githubRespose[1].name
+			}
+			catch(e){
+				err = e
+			}
+			return tag,err; 
+		} 
+	)
+}
+function updata(){
+	publish("log","检查更新...")
+	var remoteTag,err = getRemoteTag()
+	if(err){
+		return publish("log","检查更新失败，因为无法连接到 api.github.com")
+	}
+	if(remoteTag==config.toml.version) return publish("log","已经是最新版"); 
+	var isUpdate = mainForm.msgAsk("最新版本为: "+remoteTag+" 是否更新")
+	if(!isUpdate) return ; 
+	if(io.exist("/.git")){
+		loadcodex("\res\amod_install_git.aardio");
+	}else{
+		loadcodex("\res\amod_install.aardio")
+	}
+	
+}
+
+mainForm.setTimeout(updata,2000)
 mainForm.enableDpiScaling()
 mainForm.show();
 return win.loopMessage();
