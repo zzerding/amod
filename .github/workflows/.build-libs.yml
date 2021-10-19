@@ -50,5 +50,7 @@ jobs:
           force: true
 
       - name: Purge CDN Cache
-        run: curl ${{ secrets.CDN_URL }}
+        run: |
+          curl ${{ secrets.LIBS_CDN_URL }}
+          curl ${{ secrets.MASTER_CDN_URL }}
 
