@@ -1,4 +1,5 @@
 ## amod 
+
 > 这是一个 aardio 库和依赖管理的第三方插件。比原有的库管理工具更直观，且可以在 libs 分支里提交你自己的库（还未实现）。已实现更多安装式，可以方便的增加删除依赖库，其中库路径可为本地路径、git、url(lzmp格式下载地址)三种。库依赖用 [amod.toml](docs/库提交规范.md) 配置。全局配置文件在 %APPDATA%/amod/amod.toml
 
 
@@ -31,13 +32,47 @@
 - [ ] 为每个库函数建立单元测试文件 
 
 ## 使用方法
+
+### 1、安装
+
 使用方法为把本库 clone 到工具目录 OR 代码片段目录，如果你要 pr 也可以放在其它地方，在工具目录里建立一个符号连接如：cmd  `mklink /j ~/src/amod aardio/tools/amod` 。
-### 包的安装与删除
 
-#### 1、本地文件夹
+如果你看不懂上面说什么那么你可以复制下面的代码进行安装：
 
-#### 2、 url下载
+```aardio
+import inet.whttp
+var str = inet.whttp().get("https://cdn.jsdelivr.net/gh/zzerding/amod@master/res/amod_install.aardio")
+loadcodex(str)
+```
 
-​	支持 lzma gz tgz 文件后缀
+如果你想要自动用 git 安装也是可以的复制如下代码进行安装：
 
-#### 3、git 下载
+```aardio
+import inet.whttp
+var str = inet.whttp().get("https://cdn.jsdelivr.net/gh/zzerding/amod@master/res/amod_install_git.aardio")
+loadcodex(str)
+```
+
+### 2 、管理安装的库
+
+![setting window](docs/imgs/setting.png)
+
+如图所示, 库分为安装在全局aardio/lib 目录和当前工程目录，在左侧切换管理。安装好的库在这显示，你可以方便的进行删除。
+
+### 3、 安装远程的库
+
+![remote window](docs/imgs/remote.png)
+
+这里拉取远程列表，拉取的仓库为https://cdn.jsdelivr.net/gh/zzerding/amod@release/libs.json.gz 和 http://api.aardio.com/v10/exlibs/?all 这两的列表缓存更新到本地仓库。
+
+可以直接在查找栏目里输入关键字进行查询，安装到本地的意思就是安装到工程里的 lib 目录，所有库文件以符号链接的方式安装,原文件在 %APPDATA%/aardio/amod/cache 目录
+
+### 3、更方便管理自已的库
+
+![new lib](docs/imgs/newlib.png)
+
+如图所示，我们可以实验性的安装一些远程仓库中没有收录的库，以方便管理。可以以 http git  file 三种形式进行安装。http 就是库的压缩包下载链接（支持 lzma gz tgz 文件后缀）， git 就是仓库地址, file 就是包的目录或者文件。比如我们可以把代码段里的文件当成库导入到工程目录。
+
+## 包的提交
+
+包请提交到 libs 分支，提交[说明在这](https://github.com/zzerding/amod/tree/libs/)当然这要你学会用 git 。
