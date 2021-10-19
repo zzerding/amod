@@ -56,14 +56,9 @@ showListview = function(){
 	winform.listview.clear();
     winform.listview.redraw();
 	if( io.exist(config.toml.path)){ 
-		var installedLibs
-		var fileExt =fsys.getExtensionName(config.toml.path)
-		if(fileExt=="toml"){
-			var installConfig = string.toml.parse(string.load(config.toml.path)); 
-			installedLibs = installConfig.dependencies;
-		}else{
-			winform.msgWarn("配置文件错误")
-		}
+		var installConfig = package.readConfig()
+		var installedLibs = installConfig.dependencies;
+
 		for libName,lib in table.eachName(installedLibs){ 
 			var libInfo = {version:"";author:"";description:""}
 			if(libs && libs[libName]){

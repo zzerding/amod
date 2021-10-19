@@ -269,8 +269,9 @@ readConfig = function(tomlPath){
 }
 
 loadInstallLibs = function(tomlPath){
-		var tomlConfig = readConfig()
-		return tomlConfig.dependencies; 
+		var globalLibs = readConfig(_global_config_path).dependencies
+		var projectLibs = readConfig(_project_config_path).dependencies
+		return ..table.mix(globalLibs,projectLibs); 
 }
 
 writConifg = function(libName,libInfo,tomlPath){
