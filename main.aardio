@@ -7,7 +7,7 @@
 import fonts.fontAwesome;
 import win.ui;
 /*DSG{{*/
-mainForm = win.form(text="amazon_ocr";right=1040;bottom=682;bgcolor=15793151;border="none";max=false)
+mainForm = win.form(text="amod";right=1040;bottom=682;bgcolor=15793151;border="none";max=false)
 mainForm.add(
 bkplus2={cls="bkplus";left=0;top=646;right=1042;bottom=685;bgcolor=633981;dl=1;dr=1;dt=1;forecolor=702855;linearGradient=4;z=1};
 caption={cls="bkplus";text="AMOD 包管理";left=22;top=12;right=147;bottom=30;color=15780518;dl=1;dt=1;font=LOGFONT(h=-14;weight=700);z=5};
@@ -76,8 +76,10 @@ mainForm.star.oncommand = function(id,event){
 
 
 tbs.onSelchange = function(idx,strip,form){
-	if(idx==1){
-		tbs.selForm.reloadList()
+	select(idx) {
+		case 1,2 {
+			tbs.selForm.reloadList()
+		}
 	}
 }
 

@@ -84,7 +84,6 @@ winform.btnDeselectAll.oncommand = function(id,event){
 }
 
 winform.btn_ls.oncommand = function(id,event){
-	winform.listview.clear()
 	showLibsToTable(libs)
 }
 
@@ -154,6 +153,7 @@ winform.btnInstallGlobal.oncommand = function(id,event){
 	winform.btnInstallGlobal.disabled = false	
 }
 
+winform.reloadList = lambda()showLibsToTable({})
 winform.show();
 win.loopMessage();
 return winform;
