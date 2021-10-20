@@ -12,17 +12,18 @@
    [package]
    #这些为必填
    name = "log4j"
-   version = "v1.01"
-   url = "https://github.com/zzerding/aardio-log4j/releases/latest/download/log4j.tar.lzma"
-   sha = "068f7e6c70b90b8f8d4a88087fbadb86d000d3ce"
+   version = "v1.02"
+   url = "https://cdn.jsdelivr.net/gh/zzerding/aardio-log4j@v1.0.2/dist/log4j.tar.gz"
+   #git = "https://github.com/zzerding/aardio-log4j" #这样是以git clone下载的其实也很方便就是考虑到有的人连不上
+   sha = "fe53235cc77e20e860f8922eb941f21a17e5dfed"
    authors = "zzerd"
    description = "基于log4j理念设计的日志管理库,console有彩色输出日志可分类"
-   
+   samples = "test/log4jTest.aardio"
    
    #下面为可选的：请参考https://github.com/zzerding/amod/blob/master/docs/%E5%BA%93%E6%8F%90%E4%BA%A4%E8%A7%84%E8%8C%83.md
-   samples ="test/log4jTest.aardio" #示例文件地址
    homepage = "https://zzerd.com"
    repository ="https://github.com/zzerding/aardio-log4j"
+   
    
    ```
    
@@ -38,3 +39,6 @@
 
   cdn 可能有缓存的问题，如果 github raw 能访问不建议使用 cdn
 
+### 使用技巧
+
+建议把库打包一下，放到github上，然后每个版本都打上标签，用 jsdelivr cdn 加速。当然这不是强制要求的，你也可以放 git 地址
