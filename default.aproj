@@ -1,7 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <project ver="10" name="aardio工程" libEmbed="true" icon="..." ui="win" output="aardio工程.exe" CompanyName="单位名称" FileDescription="aardio工程" LegalCopyright="Copyright (C) 作者 2021" ProductName="aardio工程" InternalName="aardio工程" FileVersion="0.0.0.1" ProductVersion="0.0.0.1" publishDir="/dist/" dstrip="false" local="false" ignored="false">
 	<file name="main.aardio" path="main.aardio" comment="main.aardio"/>
-	<folder name="资源文件" path="res" embed="true" local="false" ignored="false"/>
+	<folder name="资源文件" path="res" embed="true" local="false" ignored="false">
+		<file name="amod_install.aardio" path="res\amod_install.aardio" comment="res\amod_install.aardio"/>
+		<file name="amod_install_git.aardio" path="res\amod_install_git.aardio" comment="res\amod_install_git.aardio"/>
+	</folder>
 	<folder name="窗体文件" path="dlg" comment="目录" embed="true" local="false" ignored="false">
 		<file name="remote.aardio" path="dlg\remote.aardio" comment="dlg\search.aardio"/>
 		<file name="setting.aardio" path="dlg\setting.aardio" comment="dlg\setting.aardio"/>

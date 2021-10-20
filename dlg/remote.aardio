@@ -49,6 +49,7 @@ function showLibsToTable(libs){
 		winform.listview.clear()
 		for libName,libInfo in table.eachName(libs){ 
 		var localVersion = "未安装"
+		installedLibs = package.loadInstallLibs()
 		var installLibInfo = installedLibs[libName]
 		
 		if(type(installLibInfo)==type.table){

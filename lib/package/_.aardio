@@ -227,15 +227,18 @@ var createLink = function(libName,linkPath,targetPath){
 }
 
 //install  file path
-var installForPath = function(libName,libPath,installPath){
-	createLink(libName,installPath,libPath)
+var installForPath = function(libName,libInfo,installPath){
+	createLink(libName,installPath,libInfo.path)
 }
 //install for url
-var installForUrl = function(libName,downloadUrl,installPath){
+var installForUrl = function(libName,libInfo,installPath){
+	downloadUrl = libInfo.url
+	var saveDir = ..fsys.joinpath(_cacheDir,libName,libInfo.version)
+	var extraDir = saveDir
 	//只下载压缩文件
 	var mutex = ..process.mutex("{4F4ED831-0B97-4EC2-BAC7-A616051108FC}.lock.import." + libName,false,false);
 	mutex.wait(); {
-			var ok,libPath =package.downloadFile.download(downloadUrl,"amod 下载 "+libName+" 扩展库",_cacheDir, ,libName + ".tar.lzma");
+			var ok,libPath =package.downloadFile.download(downloadUrl,"amod 下载 "+libName+" 扩展库",saveDir,extraDir);
 			if(!ok) error("下载解压出错",2)
 			createLink(libName,installPath,libPath)
 
@@ -244,12 +247,14 @@ var installForUrl = function(libName,downloadUrl,installPath){
 //install for git
 import gitDownBox
 import package.git
-var installForGit = function(libName,url,installPath){
+var installForGit = function(libName,libInfo,installPath){
 	var gitBox = gitDownBox()
-	var libPath = package.git.urlConvDirPath(url)
+	var workDir = package.git.urlConvDirPath(libInfo.git)
 	var mutex = ..process.mutex("{B0AD90E3-E207-4095-AF06-547FB8B2D313}.lock.import." + url,false,false);
 	mutex.wait(); {
-		gitBox.commnad("clone",workDir,url)
+		if(!..io.exist(workDir)) {; 
+			gitBox.commnad("clone",workDir,url)	
+		}
 	} mutex.release();
 	if(#gitBox.err>0){
 		error(gitBox.err,2)
@@ -297,11 +302,11 @@ installLib= function(libName,libInfo,installPath){
 	if(globalLibPath) return libName+"  已全局安装"
 	try{
 		if(libInfo.path){
-			 installForPath(libName,libInfo.path,installPath)
+			 installForPath(libName,libInfo,installPath)
 		}else if(libInfo.url){
-			 installForUrl(libName,libInfo.url,installPath)	
+			 installForUrl(libName,libInfo,installPath)	
 		}else if(libInfo.git){
-			 installForGit(libName,libInfo.git,installPath)
+			 installForGit(libName,libInfo,installPath)
 		}
 		//lock Config()
 	}catch(e){
