@@ -9,48 +9,50 @@ import inet.downBox;
 namespace package.downloadFile
 import win
 var findLibFullPath = function(extraDir){
-	 var fileRootDir=extraDir;
 	 if(!..io.exist(extraDir)){
 	 	return ; 
 	 }
 
  	
- 	var setupFile = ..fsys.joinpath(fileRootDir,"setup.dl.aardio")
+ 	var setupFile = ..fsys.joinpath(extraDir,"setup.dl.aardio")
 	if( ..io.exist(setupFile) ){
 		..fsys.delete(setupFile)	
 	}
 	
 	var libFullPath;
-	..fsys.enum( fileRootDir, "*.*",
+	..fsys.enum( extraDir, "*.aardio",
 		function(dir,filename,fullpath,findData){ 
-			libFullPath=fullpath
+			libFullPath=dir
 			return false; 
 		}
-	,false);
+	,true);
 
 	return libFullPath; 
 }
 
-var tar = function(filePath,downBox,isUtf8){
-	var err 
-	var tarFile = ..fsys.untar(filePath);
+function tar(filePath,extraDir,downBox,isUtf8){
+	
+	var tarFile = ..fsys.untar(filePath,extraDir);
 	if(!tarFile) return "文件路径不正确：" + filePath; 
 	tarFile.utf8 = isUtf8
 	tarFile.onProgressFile = function(path){
 		downBox.labInfo.text = path;
 	};
+
 	for(fileName,writeSize,remainSize,pos in tarFile.eachBlock(1000) ){ 
-		if( (peekMsg()!==null) && downBox.continueModal ){
-			downBox.progress.progressPos = pos
-			downBox.labInfo.text = fileName;
-		}
+		downBox.progress.progressPos = pos
+		downBox.labInfo.text = fileName;
+		..win.peekPumpMessage();
+    	if(!downBox.continueModal){
+    		return;
+    	}
+	
 	}
+	downBox.complete = true
+	
 	tarFile.close()
-	if(tarFile.complete){
-		return err; 
-	}else{
-		return tarFile.lastError; 
-	} 
+	return  tarFile.lastError; 
+
 }
 
 download = function(url,title="下载",saveDir,extraDir,saveName,parentForm){
@@ -92,21 +94,19 @@ download = function(url,title="下载",saveDir,extraDir,saveName,parentForm){
 	downBox.referer = self.referer;
 	downBox.userAgent = self.userAgent;
 	downBox.preget = self.preget;
-	
+
 	downBox.endProc = function(){
 		downBox.text = "正在解压缩:" + saveName; 
 		..win.peekPumpInputMessage();
 		
-   
+   		
 		downBox.progress.hide = false;
-		 
 		var processed = 0;
 		var step = downBox.contentLength / 1000;
 		downBox.progress.setProgressRange(1,1000);  
-		var peekMsg = ..win.peekPumpMessage;
 		if(..string.match(saveName,"<.lzma>$")){
 			var ret = ..sevenZip.lzma.decodeFile(pathCabinet,tarTempName,function(inProcessed,outProcessed){ 
-				if( (peekMsg()!==null) && downBox.continueModal ){
+				if( (..win.peekPumpMessage!==null) && downBox.continueModal ){
 			 		processed = processed + inProcessed; 
 			 		downBox.progress.progressPos = processed / step;
 				}
@@ -123,34 +123,32 @@ download = function(url,title="下载",saveDir,extraDir,saveName,parentForm){
 			}
 		}else{
 			tarTempName = downloadFilePath
-		}		
-		downBox.onClose = function(){ 
-			return false;
-		}
+		}	
+			
+
 		downBox.text = "正在展开:" + saveName; 
-		var err = tar(tarTempName,downBox)
+		//import console
+		//console.log(tarTempName)
+		var err = tar(tarTempName,extraDir,downBox)
 		if(!err){
-			owner.endModal(); 
+			owner.endModal(); 	
 		}else{
 			downBox.text = "展开出错"+err+"正在重试" + saveName; 
-			err = tar(tarTempName,downBox,true) //以 utf8 模式重试一次
-		}
+			err = tar(tarTempName,extraDir,downBox,true) //以 utf8 模式重试一次
+		}	
 		..io.remove( tarTempName );
 	}
 	
 	downBox.download(url,pathCabinet,null,null,"" ) 
 
-
 	
 	if(!downBox.complete){ 
-		return;
+		return ;
 	} 
-	
-	if( ! ..io.exist(pathCabinet,4) ){  
-		return false; 
-	} 
+
 
 	libFullPath = findLibFullPath(extraDir)
 	if(!libFullPath) return ; 
+	
 	return true,libFullPath; 		
 }
