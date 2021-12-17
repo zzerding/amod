@@ -1,0 +1,41 @@
+name: master build
+on:
+  push:
+    tags:
+      - "**"
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v2
+
+      - name: Push artifacts to release branch
+        run: |
+          git config --local user.email "action+hack@github.com"
+          git config --local user.name "github-action[bot]"
+          tar -czvf ../amod.tgz --exclude=".git" ../amod
+          git fetch
+          git checkout release
+          cp libs.json.gz ../libs.json.gz
+          git checkout --orphan release-orphan
+          git rm -rf .
+          mv ../libs.json.gz ./
+          mv ../amod.tgz ./
+          git add amod.tgz
+          git add libs.json.gz
+          git commit -am "Updated at $(date)"
+          git branch -D release
+          git branch -m release
+
+      - name: GitHub Push
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: release
+          force: true
+
+      - name: Purge CDN Cache
+        run: |
+          curl ${{ secrets.MASTER_CDN_URL }}
+
