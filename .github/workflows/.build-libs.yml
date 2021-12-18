@@ -1,7 +1,7 @@
 name: libs build
 on:
   push:
-    branches: [libs, master]
+    branches: [libs]
   schedule: 
     - cron:  '0 2 */3 * *'
 jobs:
@@ -29,9 +29,8 @@ jobs:
           git config --local user.email "action+hack@github.com"
           git config --local user.name "github-action[bot]"
           git fetch
-          git checkout master 
-          tar -czvf ../amod.tgz --exclude=".git" ../amod
           git checkout release
+          cp amod.tgz ../
           git checkout --orphan release-orphan
           git rm -rf .
           mv ../libs.json.gz ./
