@@ -15,9 +15,9 @@ if(!config.toml.installedDir){
 	config.toml.installedDir = ..fsys.joinpath(..ide.getProjectDir(),"lib")
 }
 
-if(!config.toml.version){
-	config.toml.version = "v0.0.2"
-}
+
+config.toml.version = "v0.0.2"
+
 
 /**intellisense(config)
 config.toml.installedDir=install dir path
