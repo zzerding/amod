@@ -21,6 +21,7 @@ import style
 import package;
 import config;
 import  fsys.dlg
+import fsys
 import inet.url
 import win.dlg.message;
 var libs = package.loadCacheLib()
@@ -97,8 +98,9 @@ var addFileCls = function(){
 		var path = winform.editPath.text
 		winform.textPath.text=""
 		if(#path>0){
+			path =..fsys.getFileName(path) == "_.aardio" ?fsys.getParentDir(path):path
 			path =  ..string.replace(path,"\\","/")
-			winform.editPath.text=path
+			winform.editPath.text = path
 		}
 		if(!io.exist(path)){
 			winform.textPath.text="文件路径错误"
