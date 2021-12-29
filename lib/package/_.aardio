@@ -55,8 +55,28 @@ switchConfigPath=function (index){
 	}
 	config.saveAll()
 }
+//返回子库目录路径，有的库当前没有aardio文件
+findLibFullPath = function(extraDir){
+	 if(!..io.exist(extraDir)){
+	 	return ; 
+	 }
 
+ 	
+ 	var setupFile = ..fsys.joinpath(extraDir,"setup.dl.aardio")
+	if( ..io.exist(setupFile) ){
+		..fsys.delete(setupFile)	
+	}
+	
+	var libFullPath;
+	..fsys.enum( extraDir, "_.aardio",
+		function(dir,filename,fullpath,findData){ 
+			libFullPath=dir
+			return false; 
+		}
+	,true);
 
+	return libFullPath; 
+}
 loadCacheLib = function(){
 	import web.json;
 	var systemLibs,githubLibs = {},{}
@@ -250,6 +270,7 @@ import package.git
 var installForGit = function(libName,libInfo,installPath){
 	var gitBox = gitDownBox()
 	var workDir = package.git.urlConvDirPath(libInfo.git)
+	var url = libInfo.git
 	var mutex = ..process.mutex("{B0AD90E3-E207-4095-AF06-547FB8B2D313}.lock.import." + url,false,false);
 	mutex.wait(); {
 		if(!..io.exist(workDir)) {; 
@@ -259,6 +280,7 @@ var installForGit = function(libName,libInfo,installPath){
 	if(#gitBox.err>0){
 		error(gitBox.err,2)
 	}
+	var libPath = findLibFullPath(workDir)
 	createLink(libName,installPath,libPath)
 
 }
