@@ -16,7 +16,7 @@ if(!config.toml.installedDir){
 }
 
 
-config.toml.version = "v0.0.5"
+config.toml.version = "v0.0.6"
 
 
 /**intellisense(config)

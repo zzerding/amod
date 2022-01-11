@@ -27,7 +27,7 @@ import fsys.table
 import win.dlg.message
 import package
 
-
+import console;
 
 
 //cerate listview
@@ -56,7 +56,7 @@ showListview = function(){
 	winform.listview.clear();
     winform.listview.redraw();
 	if( io.exist(config.toml.path)){ 
-		var installConfig = package.readConfig()
+		var installConfig = package.loadConfig()
 		var installedLibs = installConfig.dependencies;
 
 		for libName,lib in table.eachName(installedLibs){ 
@@ -117,7 +117,16 @@ winform.btnDeselectAll.oncommand = function(id,event){
 winform.btnInstall.oncommand = function(id,event){
 	winform.btnInstall.disabled = true;
 	
-	var installedLibs = ide.getExtLibs(); 
+	for(i=winform.listview.count;1;-1){
+		if( winform.listview.getChecked(i) ){
+			var libName = winform.listview.getItemText(i,1) ;
+			package.remove(libName)
+		}
+	}
+	package.install(installPath,tomlPath);
+	showListview()
+	ide.refreshStdLib()
+	ide.refreshUserLib()
 	package.install()
 	winform.btnInstall.disabled = false;
 }
@@ -129,9 +138,8 @@ winform.btnRemove.oncommand = function(id,event){
 	for(i=winform.listview.count;1;-1){
 		if( winform.listview.getChecked(i) ){
 			var libName = winform.listview.getItemText(i,1) ;
-			var libPath,libDir
 			package.remove(libName)
-		
+			package.removeLibConfig(libName);
 		}
 	} 
 	showListview()

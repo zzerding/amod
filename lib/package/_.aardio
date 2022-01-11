@@ -286,7 +286,7 @@ var installForGit = function(libName,libInfo,installPath){
 }
 
 
-readConfig = function(tomlPath){
+loadConfig = function(tomlPath){
 	var tomlConfig = { dependencies = {}}
 	tomlPath = tomlPath || config.toml.path
 	if(io.exist(tomlPath)){
@@ -296,16 +296,20 @@ readConfig = function(tomlPath){
 }
 
 loadInstallLibs = function(tomlPath){
-		var globalLibs = readConfig(_global_config_path).dependencies
-		var projectLibs = readConfig(_project_config_path).dependencies
+		var globalLibs = loadConfig(_global_config_path).dependencies
+		var projectLibs = loadConfig(_project_config_path).dependencies
 		return ..table.mix(globalLibs,projectLibs); 
 }
 
 writConifg = function(libName,libInfo,tomlPath){
-	var tomlConfig = readConfig()
+	var tomlConfig = loadConfig()
 	tomlPath =tomlPath||  config.toml.path
 	tomlConfig.dependencies[libName] = libInfo
 	string.save(tomlPath,string.toml.stringify(tomlConfig))
+}
+readConfig = function(libName,tomlPath){
+	var tomlConfig = loadConfig()
+	return tomlConfig.dependencies[libName]; 
 }
 
 
@@ -318,7 +322,7 @@ installLib= function(libName,libInfo,installPath){
 	if(!io.exist(installPath)) return "安装路径不存在"; 
 	var libPath
 	installPath,libPath = convLibPath(libName,installPath)
-	if(libPath) return  libName+"  存在未更新";
+	if(libPath) return ""; //存在未更新
 		
 	var _,globalLibPath = package.convLibPath(libName,_global_install_path)
 	if(globalLibPath) return libName+"  已全局安装"
@@ -386,11 +390,6 @@ removeLibConfig=function(libName,tomlPath){
 	return isSave,err; 
 }
 remove  = function(libName){
-	var isSave,err= removeLibConfig(libName)
-		if(!isSave){
-			msg = "配置文件保存失败"
-			log.print(err)
-	} 
 	var isDelete = deleteLibFile(libName)
 	var msg;
 	if(isDelete){
@@ -416,7 +415,7 @@ loadCacheLib() = load local libs json file to table return table
 getLocalPath() = get local toml path 
 getGlobalPath() = get global toml path
 
-readConfig() = read toml to table
+loadConfig(tomlPath) = read toml to table
 loadInstallLibs() = read toml to  dependencies to table
 writConifg(.(libName,libInfo,tomlPath) = writ lib info  to toml config dependencies node
 removeLibConfig(libName) = delete dependencies[libName] node
