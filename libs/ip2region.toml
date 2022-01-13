@@ -1,0 +1,12 @@
+[package]
+#这些为必填
+name = "inet.ip2region"
+version = "v1.0.0"
+git = "https://github.com/zzerding/aardio-ip2region"
+authors = "zzerd"
+description = "ip2region 快速的ip位置查询"
+samples = "test/_.aardio"
+
+#下面为可选的：请参考https://github.com/zzerding/amod/blob/master/docs/%E5%BA%93%E6%8F%90%E4%BA%A4%E8%A7%84%E8%8C%83.md
+homepage = "https://zzerd.com"
+repository ="https://github.com/zzerding/aardio-ip2region"
