@@ -1,8 +1,8 @@
 [package]
 #这些为必填
 name = "log4j"
-version = "v1.02"
-url = "https://cdn.jsdelivr.net/gh/zzerding/aardio-log4j@v1.0.2/dist/log4j.tar.gz"
+version = "v1.0.4"
+url = "https://cdn.jsdelivr.net/gh/zzerding/aardio-log4j@v1.0.4/dist/log4j.tar.gz"
 sha = "fe53235cc77e20e860f8922eb941f21a17e5dfed"
 authors = "zzerd"
 description = "基于log4j理念设计的日志管理库,console有彩色输出日志可分类"
